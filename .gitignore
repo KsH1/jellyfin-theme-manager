@@ -8,3 +8,7 @@ ThemePacks/
 
 # Local operations log with this server's paths; not published
 docs/PROD-INSTALL.md
+
+# Plugin ZIPs are attached to GitHub releases by .github/workflows/release.yml, not committed.
+# (ZIPs from before 0.3.0 stay tracked so their published download addresses keep working.)
+repository/*.zip

@@ -149,14 +149,24 @@ Requirements: .NET SDK 10 and PowerShell 7 for the scripts.
 dotnet restore ThemeManager.slnx --locked-mode
 dotnet test ThemeManager.slnx -c Release --no-restore
 node --test tests/client/core.test.mjs
-.scriptsBuild-Package.ps1                      # tests, builds, artifacts/build-<time>/
-.scriptsTest-IsolatedServer.ps1                # throw-away Jellyfin on loopback port 18196
-.scriptsTest-DefaultPacks.ps1 -Package artifactsuild-<time>
-.scriptsTest-WebInjection.ps1 -FileTransformationDir <unzipped File Transformation>
-.scriptsBuild-Repository.ps1 -Package artifactsuild-<time> -Changelog '...'   # repository/manifest.json + ZIP
+./scripts/Build-Package.ps1 [-JellyfinVersion 12.1.0]    # tests, builds, artifacts/build-<time>/
+./scripts/Test-IsolatedServer.ps1                        # throw-away Jellyfin on loopback port 18196
+./scripts/Test-ServerImages.ps1                          # library images for apps: set, back up, restore
+./scripts/Test-DefaultPacks.ps1 -Package artifacts/build-<time>
+./scripts/Test-WebInjection.ps1 -FileTransformationDir <unzipped File Transformation>
+./scripts/Test-CatalogInstall.ps1 [-JellyfinExecutable <other Jellyfin>/jellyfin.exe]   # install from the published repository
 ```
 
-The test scripts start the installed Jellyfin binary with new, empty data folders under `test-server/` (ignored by git). They never touch a running server on port 8096/18096. The version is set only in `Directory.Build.props`; bump it before `Build-Repository.ps1`, which never overwrites a published version.
+The test scripts start a Jellyfin binary with new, empty data folders under `test-server/` (ignored by git). They never touch a running server on port 8096/18096. The version is set only in `Directory.Build.props`.
+
+**Releasing:** bump `<Version>` in `Directory.Build.props`, commit and push to `main`, then push an annotated tag on that commit:
+
+```bash
+git tag -a v0.3.0 -m "What changed, in one line"
+git push origin v0.3.0
+```
+
+The *Release* workflow tests and builds for Jellyfin 12.0, 12.1 and 12.2, attaches the ZIPs to a GitHub release and commits the updated `repository/manifest.json`. Plugin ZIPs are not committed to git.
 
 ## Layout
 

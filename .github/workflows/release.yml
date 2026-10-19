@@ -1,0 +1,69 @@
+name: Release
+# Push an annotated tag such as v0.3.0 (its message becomes the changelog) on the latest main commit.
+# Builds for every supported Jellyfin version, attaches the ZIPs to a GitHub release and commits only
+# repository/manifest.json to main, so plugin ZIPs never go into git history.
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+concurrency:
+  group: release
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: windows-latest
+    env:
+      JELLYFIN_VERSIONS: '12.0.0 12.1.0 12.2.0'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check the tag
+        shell: pwsh
+        run: |
+          $version = ([xml](Get-Content Directory.Build.props -Raw)).Project.PropertyGroup.Version
+          if ('${{ github.ref_name }}' -ne "v$version") { throw "Tag ${{ github.ref_name }} does not match version $version in Directory.Build.props." }
+          # The manifest is committed to main, so the tag must be main's newest commit.
+          if ((git rev-parse HEAD) -ne (git rev-list -n 1 '${{ github.ref_name }}')) { throw 'Tag the newest commit on main.' }
+          "VERSION=$version.0" >> $env:GITHUB_ENV
+      - name: Client tests
+        run: node --test tests/client/core.test.mjs
+      - name: Build, test and package for each Jellyfin version
+        shell: pwsh
+        run: |
+          $changelog = (git tag -l --format='%(contents:subject)' '${{ github.ref_name }}').Trim()
+          if (!$changelog) { $changelog = 'Theme Manager ${{ github.ref_name }}' }
+          $base = 'https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}'
+          foreach ($jf in $env:JELLYFIN_VERSIONS -split ' ') {
+            ./scripts/Build-Package.ps1 -JellyfinVersion $jf
+            if ($LASTEXITCODE) { throw "Build for Jellyfin $jf failed." }
+            $filter = if ($jf -eq '12.2.0') { 'build-*' } else { "*-jf$jf" }
+            $package = Get-ChildItem artifacts -Directory -Filter $filter | Where-Object { $jf -ne '12.2.0' -or $_.Name -notlike '*-jf*' } | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+            ./scripts/Build-Repository.ps1 -Package "artifacts\$($package.Name)" -TargetAbi "$jf.0" -Changelog $changelog -BaseUrl $base
+          }
+          "CHANGELOG=$changelog" >> $env:GITHUB_ENV
+      - name: Create the GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $zips = Get-ChildItem repository -Filter "theme-manager_$env:VERSION*.zip" | ForEach-Object FullName
+          if ($zips.Count -ne ($env:JELLYFIN_VERSIONS -split ' ').Count) { throw "Expected one ZIP per Jellyfin version, found $($zips.Count)." }
+          gh release create '${{ github.ref_name }}' @zips --title "Theme Manager $env:VERSION" --notes $env:CHANGELOG
+          if ($LASTEXITCODE) { throw 'Creating the release failed.' }
+      - name: Publish the manifest
+        shell: pwsh
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add repository/manifest.json
+          git commit -m "Manifest for $env:VERSION"
+          git push origin main
