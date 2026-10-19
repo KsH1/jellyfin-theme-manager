@@ -66,7 +66,11 @@ Pluginet skal kunne installeres alene og stadig give noget at vælge imellem.
 3. Brugerflade: engelsk som standard. Danske tekster via Jellyfins sprogindstilling er en senere udvidelse.
 4. Biblioteksnavne til bannere: listen dækker allerede engelsk og dansk. Den udvides med de mest brugte sprog, og logikken falder altid tilbage til "første bibliotek af typen".
 
-### Fase 4 — Repository og udgivelse
+### Fase 4 — Repository og udgivelse — **delvist lavet 19/10**
+
+Lavet: offentligt repository https://github.com/KsH1/jellyfin-theme-manager (GPL-3) med Jellyfin-manifest `repository/manifest.json` og `repository/theme-manager_0.1.0.0.zip`, lavet med `scripts/Build-Repository.ps1`. Repository-URL: `https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/repository/manifest.json`. Tilføjet på produktion sammen med File Transformations repository; Jellyfins katalog viser Theme Manager 0.1.0.0 @ 12.2.0.0. Mangler: CI via GitHub Actions, Releases i stedet for ZIP i git, og accepttest på en ren server.
+
+Oprindelig plan:
 
 1. **Versioner:** 0.2.0.0 bliver første offentlige version. Hver ZIP indeholder kun pluginets egne DLL'er og `meta.json`; der følger ingen Jellyfin-assemblies med.
 2. **Målversioner:** først kun 12.2.0.0, som er den eneste, der er testet. 12.0/12.1 og 10.11 tilføjes kun, hvis de bygges og testes hver for sig (andre NuGet-versioner og .NET-versioner). Uden test lover manifestet dem ikke.
