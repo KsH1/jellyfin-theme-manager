@@ -109,6 +109,7 @@ The 29 standard themes (`default-packs/`) are 19 calendar themes with artwork (m
 | Theme Manager is not in **Available** | Check the repository URL, then reload the page. Your Jellyfin must be 12.0, 12.1 or 12.2; Jellyfin hides plugins built for other versions. |
 | No theme and no **Themes** button at the normal address | Check that **Where users see themes** says *Active*. If it says File Transformation is missing, do step 3 and restart. Otherwise reload the page. |
 | Status *NotSupported* | The installed build does not match your Jellyfin version. Uninstall it and install again from **Available**. |
+| A new version is not offered yet | GitHub keeps a copy of the repository for up to five minutes. Wait a few minutes and reload the plugin page. |
 | An update does not take effect | Stop and start Jellyfin completely (step 4), not Dashboard → Restart. |
 | TV or phone app without the theme | Expected: apps with their own interface do not show personal themes. Use Jellyfin Web in a browser. |
 

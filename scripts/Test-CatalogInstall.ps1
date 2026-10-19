@@ -9,7 +9,16 @@ param(
 $ErrorActionPreference = 'Stop'
 $projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $guid = '8fa53208-c9f3-4e99-9858-2963ed658aae'
-$latest = (Invoke-RestMethod $RepositoryUrl -Headers @{ 'Cache-Control' = 'no-cache' })[0].versions[0].version  # raw.githubusercontent.com caches for a few minutes
+# raw.githubusercontent.com keeps a copy for up to five minutes (separately for compressed requests, and query strings
+# do not bypass it). Wait until it serves the version in this checkout's repository/manifest.json.
+$localManifest = Join-Path $projectRoot 'repository\manifest.json'
+$expected = if (Test-Path $localManifest) { (Get-Content $localManifest -Raw | ConvertFrom-Json)[0].versions[0].version } else { $null }
+for ($i = 0; $i -lt 40; $i++) {
+    $latest = (Invoke-RestMethod $RepositoryUrl)[0].versions[0].version
+    if (!$expected -or $latest -eq $expected) { break }
+    Start-Sleep 10
+}
+if ($expected -and $latest -ne $expected) { throw "GitHub still serves $latest, not $expected, after 400 s." }
 $webRoot = Join-Path ([IO.Path]::GetDirectoryName($JellyfinExecutable)) 'jellyfin-web'
 $runRoot = Join-Path $projectRoot ('test-server\catalog-' + [Guid]::NewGuid().ToString('N').Substring(0, 8))
 $configRoot = Join-Path $runRoot 'config'
