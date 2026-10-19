@@ -9,6 +9,30 @@
     "imageUrl": "https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/logo.png",
     "versions": [
       {
+        "version": "0.3.0.0",
+        "changelog": "Theme management (hide, export, delete, replace), banner per library, releases via GitHub",
+        "targetAbi": "12.2.0.0",
+        "sourceUrl": "https://github.com/KsH1/jellyfin-theme-manager/releases/download/v0.3.0/theme-manager_0.3.0.0.zip",
+        "checksum": "A14DBFC0018E8D3E9D574DCCA81330FC",
+        "timestamp": "2026-10-19T18:23:43Z"
+      },
+      {
+        "version": "0.3.0.0",
+        "changelog": "Theme management (hide, export, delete, replace), banner per library, releases via GitHub",
+        "targetAbi": "12.1.0.0",
+        "sourceUrl": "https://github.com/KsH1/jellyfin-theme-manager/releases/download/v0.3.0/theme-manager_0.3.0.0-jf12.1.0.zip",
+        "checksum": "4B1E803EE05F87B71E86989C09E5260D",
+        "timestamp": "2026-10-19T18:23:32Z"
+      },
+      {
+        "version": "0.3.0.0",
+        "changelog": "Theme management (hide, export, delete, replace), banner per library, releases via GitHub",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/KsH1/jellyfin-theme-manager/releases/download/v0.3.0/theme-manager_0.3.0.0-jf12.0.0.zip",
+        "checksum": "F909C9C5DBFBC08D5C035F2F4575C089",
+        "timestamp": "2026-10-19T18:23:17Z"
+      },
+      {
         "version": "0.2.7.0",
         "changelog": "Seasonal effects are now off by default; an administrator switches them on under Server default.",
         "targetAbi": "12.2.0.0",
