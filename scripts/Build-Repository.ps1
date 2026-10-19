@@ -7,13 +7,15 @@ param(
     # The Jellyfin version the package was built for, as Jellyfin writes it, e.g. 12.1.0.0.
     [ValidatePattern('^\d+\.\d+\.\d+\.\d+$')][string]$TargetAbi = '12.2.0.0',
     [string]$Changelog = 'Preview alpha.',
-    [string]$BaseUrl = 'https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/repository'
+    # Where the ZIP is downloaded from. Defaults to the GitHub release for this version (tag v<major.minor.patch>).
+    [string]$BaseUrl
 )
 # Builds the Jellyfin plugin repository: repository/manifest.json plus one ZIP per plugin version and Jellyfin version.
 # Add the manifest's raw URL in Jellyfin under Dashboard -> Plugins -> Repositories.
 $ErrorActionPreference = 'Stop'
 $projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 if (!$Version) { $Version = ([xml](Get-Content -LiteralPath (Join-Path $projectRoot 'Directory.Build.props') -Raw)).Project.PropertyGroup.Version + '.0' }
+if (!$BaseUrl) { $BaseUrl = 'https://github.com/KsH1/jellyfin-theme-manager/releases/download/v' + $Version.Substring(0, $Version.LastIndexOf('.')) }
 $repository = Join-Path $projectRoot 'repository'
 $guid = '8fa53208-c9f3-4e99-9858-2963ed658aae'
 # Jellyfin downloads this when it installs the plugin and shows it on the plugin card.
@@ -22,7 +24,7 @@ $description = 'Seasonal and permanent themes, a personal theme per user, librar
 $overview = 'Each user chooses their own theme; server branding is not changed. Install File Transformation to show themes in the normal Jellyfin Web address.'
 # Invariant culture: a Danish locale would write 13.24.08, which Jellyfin cannot parse.
 $timestamp = [DateTime]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ssZ', [Globalization.CultureInfo]::InvariantCulture)
-# 12.2 keeps the original name so already published URLs stay valid; other Jellyfin versions get a suffix.
+# 12.2 has no suffix (the original naming); other Jellyfin versions get one.
 $jellyfin = $TargetAbi.Substring(0, $TargetAbi.LastIndexOf('.'))
 $zipName = if ($TargetAbi -eq '12.2.0.0') { "theme-manager_$Version.zip" } else { "theme-manager_$Version-jf$jellyfin.zip" }
 

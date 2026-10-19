@@ -5,7 +5,7 @@ Updated 19 October 2026 for version 0.3.0.0 (preview). User documentation is in 
 ## Supported
 
 - Jellyfin 12.0, 12.1 and 12.2, one build per version (`targetAbi` 12.0.0.0, 12.1.0.0, 12.2.0.0), .NET 10.
-- Installed from the plugin repository `repository/manifest.json` on GitHub. Plugin ZIPs from 0.3.0 on are GitHub release assets; older ZIPs stay in git so their addresses keep working.
+- Installed from the plugin repository `repository/manifest.json` on GitHub. Plugin ZIPs are GitHub release assets. Versions before 0.3.0 were removed from the manifest and from git history on 19 October 2026; installed servers update to 0.3.0 or later.
 - Jellyfin 10.x is not supported.
 
 ## Built
@@ -33,8 +33,8 @@ Every test below starts its own Jellyfin with empty data on a loopback port; non
 | Client tests (`node --test tests/client/core.test.mjs`) | 29 passed |
 | `Test-IsolatedServer.ps1` (API, access rules, import, theme management, previews, holidays, effects default) | 67 checks passed on 12.2 |
 | `Test-ServerImages.ps1` (app images, per-library banners, restore) | 22 checks passed on 12.2 |
-| `Test-WebInjection.ps1` (File Transformation, stale browser cache) | 25 checks passed on 12.2 (before 0.3.0 changes) |
-| `Test-DefaultPacks.ps1` | 9 checks passed (before 0.3.0 changes) |
+| `Test-WebInjection.ps1` (File Transformation, stale browser cache) | 25 checks passed on 12.2 |
+| `Test-DefaultPacks.ps1` | 9 checks passed |
 | `Test-CatalogInstall.ps1` (install from the published repository) | Passed on 12.2 and 12.0; 12.1 confirmed by an installation on a real 12.1 server |
 
 Not verified: Linux and Docker hosts, Firefox and Safari, two users in parallel browsers, keyboard navigation and contrast across the whole picker, native apps beyond library images.
@@ -42,5 +42,4 @@ Not verified: Linux and Docker hosts, Firefox and Safari, two users in parallel 
 ## Open
 
 1. Artwork for the 10 colour themes (needs an image tool).
-2. Removing the old plugin ZIPs from git history (about 540 MB). Changes every commit id, so it needs a decision first.
-3. Jellyfin 10.11 support, only if there is demand.
+2. Jellyfin 10.11 support, only if there is demand.
