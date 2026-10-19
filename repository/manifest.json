@@ -9,6 +9,30 @@
     "imageUrl": "https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/logo.png",
     "versions": [
       {
+        "version": "0.3.3.0",
+        "changelog": "Theme colours in the video player",
+        "targetAbi": "12.2.0.0",
+        "sourceUrl": "https://github.com/KsH1/jellyfin-theme-manager/releases/download/v0.3.3/theme-manager_0.3.3.0.zip",
+        "checksum": "21DCF46058B4DF954CB96F891BB04212",
+        "timestamp": "2026-10-19T20:08:48Z"
+      },
+      {
+        "version": "0.3.3.0",
+        "changelog": "Theme colours in the video player",
+        "targetAbi": "12.1.0.0",
+        "sourceUrl": "https://github.com/KsH1/jellyfin-theme-manager/releases/download/v0.3.3/theme-manager_0.3.3.0-jf12.1.0.zip",
+        "checksum": "CBC9945B4C07C470455ABF566EF86535",
+        "timestamp": "2026-10-19T20:08:36Z"
+      },
+      {
+        "version": "0.3.3.0",
+        "changelog": "Theme colours in the video player",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/KsH1/jellyfin-theme-manager/releases/download/v0.3.3/theme-manager_0.3.3.0-jf12.0.0.zip",
+        "checksum": "07AB45259C772272FD1A235ABA0B5C57",
+        "timestamp": "2026-10-19T20:08:21Z"
+      },
+      {
         "version": "0.3.2.0",
         "changelog": "Themed menus, dialogs and item pages, including Jellyfin's new layout",
         "targetAbi": "12.2.0.0",
