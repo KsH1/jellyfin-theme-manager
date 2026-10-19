@@ -9,6 +9,30 @@
     "imageUrl": "https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/logo.png",
     "versions": [
       {
+        "version": "0.3.1.0",
+        "changelog": "Themed header when scrolling in Jellyfin's new layout",
+        "targetAbi": "12.2.0.0",
+        "sourceUrl": "https://github.com/KsH1/jellyfin-theme-manager/releases/download/v0.3.1/theme-manager_0.3.1.0.zip",
+        "checksum": "82FDC6B50BCF68EC037A32727FD453DB",
+        "timestamp": "2026-10-19T19:00:29Z"
+      },
+      {
+        "version": "0.3.1.0",
+        "changelog": "Themed header when scrolling in Jellyfin's new layout",
+        "targetAbi": "12.1.0.0",
+        "sourceUrl": "https://github.com/KsH1/jellyfin-theme-manager/releases/download/v0.3.1/theme-manager_0.3.1.0-jf12.1.0.zip",
+        "checksum": "A0750124C09D4D9EC417EF08F712D93E",
+        "timestamp": "2026-10-19T19:00:17Z"
+      },
+      {
+        "version": "0.3.1.0",
+        "changelog": "Themed header when scrolling in Jellyfin's new layout",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/KsH1/jellyfin-theme-manager/releases/download/v0.3.1/theme-manager_0.3.1.0-jf12.0.0.zip",
+        "checksum": "6B0942D494B281C0678C3564DFE9F3C3",
+        "timestamp": "2026-10-19T19:00:01Z"
+      },
+      {
         "version": "0.3.0.0",
         "changelog": "Theme management (hide, export, delete, replace), banner per library, releases via GitHub",
         "targetAbi": "12.2.0.0",
