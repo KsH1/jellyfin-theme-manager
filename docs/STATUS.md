@@ -35,7 +35,7 @@ Every test below starts its own Jellyfin with empty data on a loopback port; non
 | `Test-ServerImages.ps1` (app images, per-library banners, restore) | 22 checks passed on 12.2 |
 | `Test-WebInjection.ps1` (File Transformation, stale browser cache) | 25 checks passed on 12.2 |
 | `Test-DefaultPacks.ps1` | 9 checks passed |
-| `Test-CatalogInstall.ps1` (install from the published repository) | Passed on 12.2 and 12.0; 12.1 confirmed by an installation on a real 12.1 server |
+| `Test-CatalogInstall.ps1` (install from the published repository) | 0.3.0.0 from the GitHub release: 7 checks passed on 12.2. Earlier versions also passed on 12.0; 12.1 confirmed on a real 12.1 server |
 
 Not verified: Linux and Docker hosts, Firefox and Safari, two users in parallel browsers, keyboard navigation and contrast across the whole picker, native apps beyond library images.
 
