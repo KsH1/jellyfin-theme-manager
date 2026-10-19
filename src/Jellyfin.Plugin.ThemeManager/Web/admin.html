@@ -48,11 +48,15 @@
     <button class="tm-save-schedule raised button-submit" is="emby-button" type="button">Save calendar</button>
     <button class="tm-delete-schedule raised" is="emby-button" type="button">Delete calendar</button>
     <h2>Theme packs</h2>
-    <p>ZIP containing theme.json and PNG/JPEG/WebP artwork. No scripts or external URLs. Existing packs are never overwritten. Import parent packs before their variants.</p>
+    <p>ZIP containing theme.json and PNG/JPEG/WebP artwork. No scripts or external URLs. Import parent packs before their variants.</p>
     <input class="tm-file" type="file" accept=".zip,application/zip" aria-label="Theme pack ZIP" />
+    <label style="display:flex;gap:.5em;align-items:center;margin:.6em 0"><input class="tm-replace" type="checkbox" /> Replace an installed theme with the same id (the old version is kept as a backup)</label>
     <button class="tm-import raised" is="emby-button" type="button">Import ZIP</button>
     <button class="tm-reload raised" is="emby-button" type="button">Refresh catalog</button>
     <pre class="tm-problems" style="white-space:pre-wrap"></pre>
+    <h3>Installed themes</h3>
+    <p>Hidden themes are left out of the theme picker; users who already chose one keep it, and calendars still use it. Deleted themes are moved to <code>theme-manager/deleted-packs</code> on the server, so they can be put back.</p>
+    <div style="overflow-x:auto"><table class="tm-themes" style="width:100%;border-collapse:collapse"><thead><tr style="text-align:left"><th>Theme</th><th>Category</th><th>In picker</th><th></th></tr></thead><tbody></tbody></table></div>
   </div></div>
   <script>
   (function () {
@@ -139,6 +143,31 @@
       });
       editor.lockId(!!schedule); el('.tm-delete-schedule').disabled = !schedule;
     }
+    function themeTable(server) {
+      const button = (text, action) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'raised'; b.setAttribute('is', 'emby-button'); b.textContent = text; b.style.margin = '.2em'; b.addEventListener('click', run(action)); return b; };
+      el('.tm-themes tbody').replaceChildren(...themes.map(t => {
+        const row = document.createElement('tr'); row.style.borderTop = '1px solid #ffffff20';
+        const name = document.createElement('td'); name.textContent = t.name + (t.extends ? ' (variant)' : ''); name.title = t.id + ' ' + t.version;
+        const category = document.createElement('td'); category.textContent = t.category;
+        const shown = document.createElement('input'); shown.type = 'checkbox'; shown.checked = !t.hidden; shown.setAttribute('aria-label', 'Show ' + t.name + ' in the theme picker');
+        shown.addEventListener('change', run(async () => { await api('Admin/Themes/' + encodeURIComponent(t.id) + '/Hidden', 'PUT', { hidden: !shown.checked }); t.hidden = !shown.checked; status(t.name + (t.hidden ? ' is hidden from the theme picker.' : ' is shown in the theme picker.')); }));
+        const picker = document.createElement('td'); picker.append(shown);
+        const actions = document.createElement('td'); actions.style.textAlign = 'right';
+        actions.append(button('Export', async () => {
+          const response = await fetch(ApiClient.getUrl('ThemeManager/Admin/Themes/' + encodeURIComponent(t.id) + '/Export'), { headers: authHeaders() });
+          if (!response.ok) throw new Error('Export failed (' + response.status + ').');
+          const link = document.createElement('a'); link.href = URL.createObjectURL(await response.blob()); link.download = t.id + '.zip'; link.click();
+          setTimeout(() => URL.revokeObjectURL(link.href), 10000);
+        }));
+        const del = button('Delete', async () => {
+          if (!confirm('Delete "' + t.name + '"? A copy is kept on the server in theme-manager/deleted-packs.')) return;
+          await api('Admin/Themes/' + encodeURIComponent(t.id), 'DELETE'); await load(); status(t.name + ' deleted. A copy is kept on the server.');
+        });
+        if (server.mode === 'Fixed' && server.themeId === t.id) { del.disabled = true; del.title = 'This is the server default.'; }
+        actions.append(del);
+        row.append(name, category, picker, actions); return row;
+      }));
+    }
     async function load() {
       const [catalog, settings, mine, effective, all] = await Promise.all([api('Catalog'), api('Admin/Settings'), api('Me'), api('Effective'), api('Schedules')]);
       themes = catalog.themes; schedules = all;
@@ -160,6 +189,7 @@
         const box = document.createElement('input'); box.type = 'checkbox'; box.value = t.id; box.checked = !excluded.has(t.id);
         const label = document.createElement('label'); label.style.cssText = 'display:flex;gap:.4em;align-items:center'; label.append(box, t.name); return label;
       }));
+      themeTable(settings.choice);
       if (effective.resolution.themeId) el('.tm-gallery').value = effective.resolution.themeId;
       status(themes.length + ' themes · Calendar date: ' + effective.localDate + ' · Effective choice: ' + (effective.theme?.name || 'Original Jellyfin'));
       modeControls(); await preview();
@@ -262,7 +292,8 @@
     el('.tm-import').addEventListener('click', run(async () => {
       const file = el('.tm-file').files[0]; if (!file) throw new Error('Select a theme ZIP first.');
       if (file.size > 32 * 1024 * 1024) throw new Error('ZIP limit: 32 MiB.');
-      status('Importing theme…'); await api('Admin/Import', 'POST', file, true); await load();
+      status('Importing theme…'); const result = await api('Admin/Import' + (el('.tm-replace').checked ? '?replace=true' : ''), 'POST', file, true); await load();
+      status('Imported ' + result.id + '.');
     }));
     page.addEventListener('viewshow', run(load));
     page.addEventListener('viewshow', run(webClient));

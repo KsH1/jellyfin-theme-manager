@@ -139,6 +139,36 @@ public sealed class CoreTests : IDisposable
     }
 
     [Fact]
+    public async Task ReplaceKeepsBackupAndRestoresOnFailure()
+    {
+        var catalog=Catalog; catalog.Reload(); var installer=new ThemePackInstaller(catalog);
+        using var first=Zip(("theme.json",JsonSerializer.Serialize(new ThemeManifest { Id="custom",Name="Old" },ThemeJson.Options)));
+        await installer.InstallAsync(first,default);
+        using var bad=Zip(("theme.json","{\"id\":\"custom\",\"name\":\"Bad\",\"assets\":{\"background\":\"missing.png\"}}"));
+        await Assert.ThrowsAsync<InvalidDataException>(()=>installer.InstallAsync(bad,default,replace:true));
+        Assert.Equal("Old",catalog.Snapshot.Themes["custom"].Manifest.Name);
+        Assert.False(Directory.Exists(installer.BackupRoot) && Directory.EnumerateDirectories(installer.BackupRoot).Any());
+        using var good=Zip(("theme.json",JsonSerializer.Serialize(new ThemeManifest { Id="custom",Name="New" },ThemeJson.Options)));
+        await installer.InstallAsync(good,default,replace:true);
+        Assert.Equal("New",catalog.Snapshot.Themes["custom"].Manifest.Name);
+        Assert.Contains("\"Old\"",File.ReadAllText(Path.Combine(Assert.Single(Directory.GetDirectories(installer.BackupRoot)),"theme.json")));
+    }
+
+    [Fact]
+    public async Task ExportImportsAgainAndDeleteKeepsBackup()
+    {
+        Pack(new ThemeManifest { Id="base",Name="Base" }); Pack(new ThemeManifest { Id="child",Name="Child",Extends="base" });
+        var catalog=Catalog; catalog.Reload(); var installer=new ThemePackInstaller(catalog);
+        await Assert.ThrowsAsync<InvalidDataException>(()=>installer.DeleteAsync("base",default));
+        using var exported=new MemoryStream(); await installer.ExportAsync("child",exported,default);
+        var backup=await installer.DeleteAsync("child",default);
+        Assert.False(catalog.Snapshot.Themes.ContainsKey("child")); Assert.True(File.Exists(Path.Combine(backup,"theme.json")));
+        exported.Position=0; Assert.Equal("child",await installer.InstallAsync(exported,default));
+        await Assert.ThrowsAsync<FileNotFoundException>(()=>installer.DeleteAsync("missing",default));
+        await Assert.ThrowsAsync<InvalidDataException>(()=>installer.DeleteAsync("../packs",default));
+    }
+
+    [Fact]
     public async Task UserPreferencesPersistAndStayIsolated()
     {
         var path=Path.Combine(_root,"users"); var store=new UserThemeStore(path); var alice=Guid.NewGuid(); var bob=Guid.NewGuid();

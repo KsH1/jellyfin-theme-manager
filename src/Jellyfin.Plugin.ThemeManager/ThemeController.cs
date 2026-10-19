@@ -12,6 +12,7 @@ namespace Jellyfin.Plugin.ThemeManager;
 /// <param name="AutomaticExcluded">Theme ids left out of Automatic Seasonal; null keeps the current setting.</param>
 public sealed record ServerSettings(ThemeChoice Choice, string TimeZoneId, bool AllowPersonalSchedules = true, IReadOnlyList<string>? AutomaticExcluded = null, bool? AllowEffects = null);
 public sealed record ScheduleTest(ThemeSchedule Schedule, DateOnly? From = null);
+public sealed record ThemeVisibility(bool Hidden);
 
 [ApiController]
 [Authorize]
@@ -26,13 +27,17 @@ public sealed class ThemeController(ThemeCatalog catalog, UserThemeStore users, 
         return !info.IsApiKey && info.UserId != Guid.Empty ? info.UserId : null;
     }
 
+    private static bool IsHidden(string id) => Plugin.Instance.Configuration.HiddenThemes.Contains(id, StringComparer.Ordinal);
+
     private static object Describe(ResolvedTheme theme) => new
     {
         theme.Manifest.Id, theme.Manifest.Name, theme.Manifest.Version, theme.Manifest.Category,
         theme.Manifest.Extends, theme.Manifest.Calendar, theme.Manifest.Effect, theme.Palette,
         Assets = theme.Assets.ToDictionary(p => p.Key, p => new { p.Value.ContentType, p.Value.Revision }),
+        Hidden = IsHidden(theme.Manifest.Id),
     };
 
+    /// <summary>All themes; hidden ones are marked so the picker can leave them out.</summary>
     [HttpGet("Catalog")]
     public IActionResult GetCatalog() => Data(new { Themes = catalog.Snapshot.Themes.Values.OrderBy(t => t.Manifest.Name).Select(Describe), catalog.Snapshot.LoadedAt });
 
@@ -49,6 +54,9 @@ public sealed class ThemeController(ThemeCatalog catalog, UserThemeStore users, 
         if (await CurrentUser().ConfigureAwait(false) is not { } id) return Forbid();
         try { ThemeResolver.Validate(choice, catalog.Snapshot, allowFollowServer: true, await schedules.ForUserAsync(id, cancellationToken).ConfigureAwait(false)); }
         catch (InvalidDataException ex) { return BadRequest(new { Error = ex.Message }); }
+        // A hidden theme cannot be newly chosen, but a user who already has it may save other changes.
+        if (choice.Mode == ThemeMode.Fixed && choice.ThemeId is { } themeId && IsHidden(themeId) && (await users.GetAsync(id, cancellationToken).ConfigureAwait(false)).ThemeId != themeId)
+            return BadRequest(new { Error = "An administrator has hidden this theme." });
         await users.SetAsync(id, choice, cancellationToken).ConfigureAwait(false);
         return NoContent();
     }
@@ -221,11 +229,52 @@ public sealed class ThemeController(ThemeCatalog catalog, UserThemeStore users, 
         return Data(new { Count = snapshot.Themes.Count, snapshot.Problems, snapshot.LoadedAt });
     }
 
+    [HttpPut("Admin/Themes/{id}/Hidden")]
+    [Authorize(Policy = Policies.RequiresElevation)]
+    public IActionResult SetHidden(string id, [FromBody] ThemeVisibility visibility)
+    {
+        if (!catalog.Snapshot.Themes.ContainsKey(id)) return NotFound();
+        var configuration = Plugin.Instance.Configuration;
+        var rest = configuration.HiddenThemes.Where(t => t != id && catalog.Snapshot.Themes.ContainsKey(t));
+        configuration.HiddenThemes = [.. visibility.Hidden ? rest.Append(id) : rest];
+        Plugin.Instance.SaveConfiguration();
+        return NoContent();
+    }
+
+    [HttpGet("Admin/Themes/{id}/Export")]
+    [Authorize(Policy = Policies.RequiresElevation)]
+    public async Task<IActionResult> Export(string id, CancellationToken cancellationToken)
+    {
+        if (!catalog.Snapshot.Themes.ContainsKey(id)) return NotFound();
+        var buffer = new MemoryStream();
+        await installer.ExportAsync(id, buffer, cancellationToken).ConfigureAwait(false);
+        buffer.Position = 0;
+        return File(buffer, "application/zip", id + ".zip");
+    }
+
+    [HttpDelete("Admin/Themes/{id}")]
+    [Authorize(Policy = Policies.RequiresElevation)]
+    public async Task<IActionResult> DeleteTheme(string id, CancellationToken cancellationToken)
+    {
+        if (Plugin.Instance.ServerChoice is { Mode: ThemeMode.Fixed } server && server.ThemeId == id)
+            return Conflict(new { Error = "This theme is the server default. Choose another server default first." });
+        try
+        {
+            var backup = await installer.DeleteAsync(id, cancellationToken).ConfigureAwait(false);
+            logger.LogInformation("Theme Manager: an administrator deleted theme {Id}; a copy is kept in {Backup}", id, backup);
+        }
+        catch (FileNotFoundException) { return NotFound(); }
+        catch (InvalidDataException ex) { return Conflict(new { Error = ex.Message }); }
+        // Users who chose it get Automatic Seasonal until they choose again; calendars skip it.
+        return NoContent();
+    }
+
+    /// <param name="replace">Replace an installed theme with the same id; the old one is kept as a backup.</param>
     [HttpPost("Admin/Import")]
     [Authorize(Policy = Policies.RequiresElevation)]
     [RequestSizeLimit(32 * 1024 * 1024)]
     [Consumes("application/zip")]
-    public async Task<IActionResult> Import(CancellationToken cancellationToken)
+    public async Task<IActionResult> Import([FromQuery] bool replace, CancellationToken cancellationToken)
     {
         // ZipArchive requires a seekable source; bound both compressed and expanded data.
         await using var buffer = new MemoryStream();
@@ -237,7 +286,7 @@ public sealed class ThemeController(ThemeCatalog catalog, UserThemeStore users, 
             await buffer.WriteAsync(chunk.AsMemory(0, read), cancellationToken).ConfigureAwait(false);
         }
         buffer.Position = 0;
-        try { return Data(new { Id = await installer.InstallAsync(buffer, cancellationToken).ConfigureAwait(false) }); }
+        try { return Data(new { Id = await installer.InstallAsync(buffer, cancellationToken, replace).ConfigureAwait(false) }); }
         catch (Exception ex) when (ex is InvalidDataException or JsonException or ArgumentException)
         {
             logger.LogWarning("Theme Manager rejected an uploaded theme pack: {Reason}", ex.Message);

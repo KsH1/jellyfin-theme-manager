@@ -22,6 +22,8 @@ public sealed class PluginConfiguration : BasePluginConfiguration
     public bool ServerWideImages { get; set; }
     /// <summary>Seasonal effects (snow, leaves, hearts, confetti) in Jellyfin Web. Off until an administrator switches them on; each user can still switch them off.</summary>
     public bool AllowEffects { get; set; }
+    /// <summary>Theme ids left out of the theme picker. Users who already chose one keep it, and calendars still use it.</summary>
+    public string[] HiddenThemes { get; set; } = [];
 }
 
 public sealed class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages

@@ -169,6 +169,21 @@ try {
     Expect (@($afterImport.themes | Where-Object id -eq 'sample-ocean').Count -eq 1) 'New pack appears without server restart'
     $duplicate=Invoke-WebRequest -Uri "$base/ThemeManager/Admin/Import" -Method Post -Headers $admin -ContentType 'application/zip' -InFile $zip -SkipHttpErrorCheck
     Expect ($duplicate.StatusCode -eq 400) 'Duplicate import rejected without overwriting'
+    $replaced=Invoke-WebRequest -Uri "$base/ThemeManager/Admin/Import?replace=true" -Method Post -Headers $admin -ContentType 'application/zip' -InFile $zip -SkipHttpErrorCheck
+    Expect ($replaced.StatusCode -eq 200) 'Import with replace updates an installed theme'
+    Expect ((Status 'ThemeManager/Admin/Themes/retro-neon' 'DELETE' $viewer) -eq 403) 'Non-admin cannot delete a theme'
+    Expect ((Send 'ThemeManager/Admin/Themes/ocean-blue/Hidden' 'PUT' @{hidden=$true} $viewer) -eq 403) 'Non-admin cannot hide a theme'
+    Expect ((Send 'ThemeManager/Admin/Themes/ocean-blue/Hidden' 'PUT' @{hidden=$true} $admin) -eq 204 -and (Send 'ThemeManager/Admin/Themes/retro-neon/Hidden' 'PUT' @{hidden=$true} $admin) -eq 204) 'Administrator hides themes'
+    Expect ((@((Request 'ThemeManager/Catalog' 'GET' $null $viewer).themes | Where-Object hidden).id -join ',') -eq 'ocean-blue,retro-neon') 'Catalog marks hidden themes'
+    Expect ((Send 'ThemeManager/Me' 'PUT' @{mode='Fixed';themeId='ocean-blue'} $viewer) -eq 204) 'User keeps a hidden theme they already chose'
+    Expect ((Send 'ThemeManager/Me' 'PUT' @{mode='Fixed';themeId='retro-neon'} $viewer) -eq 400) 'User cannot newly choose a hidden theme'
+    $null=Send 'ThemeManager/Admin/Themes/ocean-blue/Hidden' 'PUT' @{hidden=$false} $admin;$null=Send 'ThemeManager/Admin/Themes/retro-neon/Hidden' 'PUT' @{hidden=$false} $admin
+    $exportZip=Join-Path $runRoot 'exported-ocean.zip'
+    $export=Invoke-WebRequest -Uri "$base/ThemeManager/Admin/Themes/sample-ocean/Export" -Headers $admin -OutFile $exportZip -PassThru -SkipHttpErrorCheck
+    Expect ($export.StatusCode -eq 200 -and (Get-Item $exportZip).Length -gt 0) 'Administrator exports a theme as ZIP'
+    Expect ((Status 'ThemeManager/Admin/Themes/sample-ocean' 'DELETE' $admin) -eq 204 -and @((Request 'ThemeManager/Catalog' 'GET' $null $admin).themes | Where-Object id -eq 'sample-ocean').Count -eq 0) 'Administrator deletes a theme'
+    $reimport=Invoke-WebRequest -Uri "$base/ThemeManager/Admin/Import" -Method Post -Headers $admin -ContentType 'application/zip' -InFile $exportZip -SkipHttpErrorCheck
+    Expect ($reimport.StatusCode -eq 200) 'Exported theme imports again'
     $settings=Request 'ThemeManager/Admin/Settings' 'GET' $null $admin
     Expect ($settings.choice.mode -eq 'Original') 'Rejected non-admin update preserved server default'
     $null=Request 'Auth/Keys?app=ThemeManagerSmoke' 'POST' $null $admin

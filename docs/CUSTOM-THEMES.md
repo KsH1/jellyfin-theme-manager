@@ -5,7 +5,7 @@ This guide covers two things:
 1. **A theme**: a background, banners for the library cards and a set of colours, uploaded as a ZIP.
 2. **A calendar**: your own "Automatic Seasonal" that decides which theme shows on which dates. It is made in the browser; no files needed.
 
-Everything here works in Theme Manager 0.2.0.0 and later. It was tested on Jellyfin 12.2. The full field reference is in [THEME-PACKS.md](THEME-PACKS.md) (Danish).
+Everything here works in Theme Manager 0.2.0.0 and later; hiding, exporting, deleting and replacing themes need 0.3.0.0. It was tested on Jellyfin 12.2. The full field reference is in [THEME-PACKS.md](THEME-PACKS.md) (Danish).
 
 ## Part 1 — A theme
 
@@ -105,20 +105,25 @@ A ready-made ZIP to try first: [`examples/sample-aurora.zip`](../examples/sample
 
 If the import fails, the page shows the reason, for example a missing file, a wrong colour value or an id that already exists. Nothing is installed when an import fails.
 
-### Change or remove a theme
+### Change, hide or remove a theme
 
-An import never overwrites an existing theme, so you cannot import a new version with the same id. Instead, change the files on the server:
+Under **Theme packs → Installed themes** on the plugin page, each theme has:
 
-1. Open the theme folder on the server:
-   - Windows: `C:\ProgramData\Jellyfin\Server\data\theme-manager\packs\<id>\`
-   - Linux packages: typically `/var/lib/jellyfin/data/theme-manager/packs/<id>/`
-   - Docker: typically `/config/data/theme-manager/packs/<id>/`
-2. Replace or edit the files, or delete the whole folder to remove the theme.
-3. Click **Refresh catalog** on the plugin page.
+- **In picker:** untick it to hide the theme from the theme picker. Users who already chose it keep it, and calendars still use it.
+- **Export:** downloads the theme as a ZIP that can be edited and imported again.
+- **Delete:** removes the theme. It cannot be deleted while it is the fixed server default, or while another theme builds on it with `extends`. Users who had chosen it get Automatic Seasonal until they choose again.
 
-The browser picks up changed images by itself, because each image's address includes a fingerprint of the file. Users who had chosen a removed theme get Automatic Seasonal until they choose again.
+To update a theme, import a new ZIP with the same `id` and tick **Replace an installed theme with the same id**. If the new version is invalid, the old one stays.
 
-You can also put a theme folder there directly instead of importing a ZIP. The folder name must equal the `id`.
+Deleted and replaced versions are not thrown away. They are moved to `theme-manager/deleted-packs/` in Jellyfin's data folder:
+
+- Windows: `C:\ProgramData\Jellyfin\Server\data	heme-manager\`
+- Linux packages: typically `/var/lib/jellyfin/data/theme-manager/`
+- Docker: typically `/config/data/theme-manager/`
+
+To bring one back, move its folder to `packs/<id>/` and click **Refresh catalog**. The browser picks up changed images by itself, because each image's address includes a fingerprint of the file.
+
+You can also put a theme folder directly in `theme-manager/packs/` instead of importing a ZIP, then click **Refresh catalog**. The folder name must equal the `id`.
 
 ## Part 2 — A calendar
 

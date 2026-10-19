@@ -8,7 +8,11 @@ public sealed class ThemePackInstaller(ThemeCatalog catalog)
     public const long MaxExpandedBytes = 128 * 1024 * 1024;
     private readonly SemaphoreSlim _gate = new(1, 1);
 
-    public async Task<string> InstallAsync(Stream input, CancellationToken cancellationToken)
+    /// <summary>Where deleted and replaced packs are kept, one folder each, so nothing is lost by a mistake.</summary>
+    public string BackupRoot => Path.Combine(Path.GetDirectoryName(catalog.Root)!, "deleted-packs");
+
+    /// <param name="replace">Replace an installed pack with the same id; the old one is moved to <see cref="BackupRoot"/> and put back if the new one is invalid.</param>
+    public async Task<string> InstallAsync(Stream input, CancellationToken cancellationToken, bool replace = false)
     {
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         var staging = Path.Combine(Path.GetDirectoryName(catalog.Root)!, "ThemePackStaging", Guid.NewGuid().ToString("N"));
@@ -48,15 +52,17 @@ public sealed class ThemePackInstaller(ThemeCatalog catalog)
                 ?? throw new InvalidDataException("Empty theme manifest.");
             if (!SafePaths.IsId(manifest.Id)) throw new InvalidDataException("Invalid pack id.");
             var target = SafePaths.Within(catalog.Root, manifest.Id);
-            if (Directory.Exists(target)) throw new InvalidDataException("This theme already exists. Existing packs are never overwritten by import.");
+            if (Directory.Exists(target) && !replace) throw new InvalidDataException("This theme already exists. Tick \"Replace\" to update it; the old version is kept as a backup.");
             if (manifest.Extends is { } parent && !catalog.Snapshot.Themes.ContainsKey(parent)) throw new InvalidDataException("Install the parent theme first.");
             Directory.CreateDirectory(catalog.Root);
+            var backup = Directory.Exists(target) ? MoveToBackup(target, manifest.Id) : null;
             Directory.Move(staging, target);
             var snapshot = catalog.Reload();
             if (!snapshot.Themes.ContainsKey(manifest.Id))
             {
-                // Roll back only the exact new directory moved above; existing packs are untouched.
+                // Roll back exactly what was moved above: the new pack out, the replaced one back.
                 Directory.Move(target, staging);
+                if (backup is not null) Directory.Move(backup, target);
                 catalog.Reload();
                 throw new InvalidDataException("Pack validation failed: " + string.Join("; ", snapshot.Problems.Where(p => p.Pack == manifest.Id).Select(p => p.Message)));
             }
@@ -67,5 +73,59 @@ public sealed class ThemePackInstaller(ThemeCatalog catalog)
             try { if (Directory.Exists(staging)) Directory.Delete(staging, recursive: true); }
             finally { _gate.Release(); }
         }
+    }
+
+    /// <summary>Removes a pack from the catalog by moving it to <see cref="BackupRoot"/>; returns the backup folder.</summary>
+    public async Task<string> DeleteAsync(string id, CancellationToken cancellationToken)
+    {
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var folder = PackFolder(id);
+            var children = catalog.Snapshot.Themes.Values.Where(t => t.Manifest.Extends == id).Select(t => t.Manifest.Name).ToList();
+            if (children.Count > 0) throw new InvalidDataException("Other themes build on this one: " + string.Join(", ", children) + ". Delete those first.");
+            var backup = MoveToBackup(folder, id);
+            catalog.Reload();
+            return backup;
+        }
+        finally { _gate.Release(); }
+    }
+
+    /// <summary>Writes the pack as a ZIP that can be imported again.</summary>
+    public async Task ExportAsync(string id, Stream output, CancellationToken cancellationToken)
+    {
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var folder = PackFolder(id);
+            using var zip = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true);
+            foreach (var file in Directory.EnumerateFiles(folder, "*", SearchOption.AllDirectories))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var relative = Path.GetRelativePath(folder, file).Replace(Path.DirectorySeparatorChar, '/');
+                // Same path rules as import, so an export always imports again.
+                SafePaths.Within(folder, relative);
+                await using var source = File.OpenRead(file);
+                await using var entry = zip.CreateEntry(relative, CompressionLevel.Optimal).Open();
+                await source.CopyToAsync(entry, cancellationToken).ConfigureAwait(false);
+            }
+        }
+        finally { _gate.Release(); }
+    }
+
+    private string PackFolder(string id)
+    {
+        if (!SafePaths.IsId(id)) throw new InvalidDataException("Invalid theme id.");
+        var folder = SafePaths.Within(catalog.Root, id);
+        if (!Directory.Exists(folder)) throw new FileNotFoundException("No installed theme with this id.", id);
+        return folder;
+    }
+
+    private string MoveToBackup(string folder, string id)
+    {
+        Directory.CreateDirectory(BackupRoot);
+        var backup = Path.Combine(BackupRoot, id + "-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss", System.Globalization.CultureInfo.InvariantCulture) + "-" + Guid.NewGuid().ToString("N")[..6]);
+        Directory.Move(folder, backup);
+        return backup;
     }
 }

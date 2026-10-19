@@ -170,7 +170,8 @@ export function createPicker(getSession, onSaved, onEffects = () => {}) {
         try {
             const [catalog, mine] = await Promise.all([request(session, 'Catalog', { signal: job.signal }), request(session, 'Me', { signal: job.signal })]);
             if (!job.current() || !valid()) return;
-            themes = catalog.themes; selected = mine.themeId || themes[0]?.id || null;
+            // Hidden themes stay out of the picker, except the one this user already has.
+            themes = catalog.themes.filter(theme => !theme.hidden || theme.id === mine.themeId); selected = mine.themeId || themes[0]?.id || null;
             await loadCalendars(job);
             if (!job.current() || !valid()) return;
             // Open on the saved theme's category; without a fixed theme, start with the year-round themes.
