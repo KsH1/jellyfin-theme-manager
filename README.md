@@ -4,7 +4,7 @@
 
 Seasonal and permanent themes for Jellyfin Web. Each user picks their own theme, follows the server default, or uses a calendar. Library cards get themed banners; any library without its own banner gets one with its name. Server branding, Custom CSS and library images are not changed.
 
-**Status:** preview, for **Jellyfin 12.0, 12.1 and 12.2**. Each Jellyfin version gets its own build; Jellyfin picks the right one. 12.2 is tested on a running server; the 12.0 and 12.1 builds are compiled against those versions but not yet tested on a running server. Jellyfin 10.x is not supported.
+**Status:** preview, for **Jellyfin 12.0, 12.1 and 12.2**. Each Jellyfin version gets its own build; Jellyfin picks the right one. 12.2 is fully tested. 12.1 is confirmed to install from the catalog and load as Active on a running 12.1 server. The 12.0 build is compiled against 12.0 but not yet tested on a running server. Jellyfin 10.x is not supported.
 
 ![The Jellyfin home screen with the Halloween theme: themed Movies and TV Shows banners and a generic Music banner](docs/images/use-0-home.png)
 
