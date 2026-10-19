@@ -3,10 +3,14 @@
     <RootNamespace>Jellyfin.Plugin.ThemeManager</RootNamespace>
     <AssemblyName>Jellyfin.Plugin.ThemeManager</AssemblyName>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <!-- The Jellyfin server version to build for: dotnet build -p:JellyfinVersion=12.1.0. A plugin only loads on the
+         server version it was built for, so each version gets its own build and its own lock file. -->
+    <JellyfinVersion Condition="'$(JellyfinVersion)' == ''">12.2.0</JellyfinVersion>
+    <NuGetLockFilePath Condition="'$(JellyfinVersion)' != '12.2.0'">packages.$(JellyfinVersion).lock.json</NuGetLockFilePath>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Jellyfin.Controller" Version="12.2.0" ExcludeAssets="runtime" />
-    <PackageReference Include="Jellyfin.Model" Version="12.2.0" ExcludeAssets="runtime" />
+    <PackageReference Include="Jellyfin.Controller" Version="$(JellyfinVersion)" ExcludeAssets="runtime" />
+    <PackageReference Include="Jellyfin.Model" Version="$(JellyfinVersion)" ExcludeAssets="runtime" />
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="../ThemeManager.Core/ThemeManager.Core.csproj" />
     <EmbeddedResource Include="Web/*" />

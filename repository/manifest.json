@@ -17,6 +17,22 @@
         "timestamp": "2026-10-19T15:21:22Z"
       },
       {
+        "version": "0.2.3.0",
+        "changelog": "Build for Jellyfin 12.1.0 of 0.2.3.0. Same code as the 12.2 build; not yet tested on a 12.1.0 server.",
+        "targetAbi": "12.1.0.0",
+        "sourceUrl": "https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/repository/theme-manager_0.2.3.0-jf12.1.0.zip",
+        "checksum": "48DE294F30994A399D0D7B7B8B9F6DE5",
+        "timestamp": "2026-10-19T15:33:29Z"
+      },
+      {
+        "version": "0.2.3.0",
+        "changelog": "Build for Jellyfin 12.0.0 of 0.2.3.0. Same code as the 12.2 build; not yet tested on a 12.0.0 server.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/repository/theme-manager_0.2.3.0-jf12.0.0.zip",
+        "checksum": "9F41FE8979879E642E39DD452BD0555A",
+        "timestamp": "2026-10-19T15:33:18Z"
+      },
+      {
         "version": "0.2.2.0",
         "changelog": "Adds the plugin logo.",
         "targetAbi": "12.2.0.0",

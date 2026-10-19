@@ -5,7 +5,7 @@ This guide covers two things:
 1. **A theme**: a background, banners for the library cards and a set of colours, uploaded as a ZIP.
 2. **A calendar**: your own "Automatic Seasonal" that decides which theme shows on which dates. It is made in the browser; no files needed.
 
-Everything here works in Theme Manager 0.2.0.0 on Jellyfin 12.2. The full field reference is in [THEME-PACKS.md](THEME-PACKS.md) (Danish).
+Everything here works in Theme Manager 0.2.0.0 and later. It was tested on Jellyfin 12.2. The full field reference is in [THEME-PACKS.md](THEME-PACKS.md) (Danish).
 
 ## Part 1 — A theme
 

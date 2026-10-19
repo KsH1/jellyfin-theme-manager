@@ -4,7 +4,7 @@
 
 Seasonal and permanent themes for Jellyfin Web. Each user picks their own theme, follows the server default, or uses a calendar. Library cards get themed banners; any library without its own banner gets one with its name. Server branding, Custom CSS and library images are not changed.
 
-**Status:** preview, for **Jellyfin 12.2** only. Other Jellyfin versions are not built or tested.
+**Status:** preview, for **Jellyfin 12.0, 12.1 and 12.2**. Each Jellyfin version gets its own build; Jellyfin picks the right one. 12.2 is tested on a running server; the 12.0 and 12.1 builds are compiled against those versions but not yet tested on a running server. Jellyfin 10.x is not supported.
 
 ![The Jellyfin home screen with the Halloween theme: themed Movies and TV Shows banners and a generic Music banner](docs/images/use-0-home.png)
 
@@ -104,9 +104,9 @@ The 29 standard themes (`default-packs/`) are 19 calendar themes with artwork (m
 | You see | Do this |
 |---|---|
 | A puzzle-piece image, and a message that the plugin details could not be fetched from the repository | The repository from step 1 is missing. Add it and reload the page. |
-| Theme Manager is not in **Available** | Check the repository URL. Your Jellyfin must be 12.2: other versions are not offered. |
+| Theme Manager is not in **Available** | Check the repository URL, then reload the page. Your Jellyfin must be 12.0, 12.1 or 12.2; Jellyfin hides plugins built for other versions. |
 | No theme and no **Themes** button at the normal address | Check that **Where users see themes** says *Active*. If it says File Transformation is missing, do step 3 and restart. Otherwise reload the page. |
-| Status *NotSupported* | Your Jellyfin is not 12.2. |
+| Status *NotSupported* | The installed build does not match your Jellyfin version. Uninstall it and install again from **Available**. |
 | An update does not take effect | Stop and start Jellyfin completely (step 4), not Dashboard → Restart. |
 | TV or phone app without the theme | Expected: apps with their own interface do not show personal themes. Use Jellyfin Web in a browser. |
 

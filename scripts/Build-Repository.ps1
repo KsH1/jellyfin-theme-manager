@@ -1,14 +1,15 @@
 [CmdletBinding()]
 param(
-    # A folder made by Build-Package.ps1, e.g. artifacts\build-20261019-095639
+    # A folder made by Build-Package.ps1, e.g. artifacts\build-20261019-095639 (or ...-jf12.1.0)
     [Parameter(Mandatory)][string]$Package,
     # Defaults to the version in Directory.Build.props.
     [string]$Version,
-    [string]$TargetAbi = '12.2.0.0',
+    # The Jellyfin version the package was built for, as Jellyfin writes it, e.g. 12.1.0.0.
+    [ValidatePattern('^\d+\.\d+\.\d+\.\d+$')][string]$TargetAbi = '12.2.0.0',
     [string]$Changelog = 'Preview alpha.',
     [string]$BaseUrl = 'https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/repository'
 )
-# Builds the Jellyfin plugin repository: repository/manifest.json plus one ZIP per version.
+# Builds the Jellyfin plugin repository: repository/manifest.json plus one ZIP per plugin version and Jellyfin version.
 # Add the manifest's raw URL in Jellyfin under Dashboard -> Plugins -> Repositories.
 $ErrorActionPreference = 'Stop'
 $projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
@@ -21,6 +22,9 @@ $description = 'Seasonal and permanent themes, a personal theme per user, librar
 $overview = 'Each user chooses their own theme; server branding is not changed. Install File Transformation to show themes in the normal Jellyfin Web address.'
 # Invariant culture: a Danish locale would write 13.24.08, which Jellyfin cannot parse.
 $timestamp = [DateTime]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ssZ', [Globalization.CultureInfo]::InvariantCulture)
+# 12.2 keeps the original name so already published URLs stay valid; other Jellyfin versions get a suffix.
+$jellyfin = $TargetAbi.Substring(0, $TargetAbi.LastIndexOf('.'))
+$zipName = if ($TargetAbi -eq '12.2.0.0') { "theme-manager_$Version.zip" } else { "theme-manager_$Version-jf$jellyfin.zip" }
 
 $stage = Join-Path ([IO.Path]::GetTempPath()) ('tm-repo-' + [Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $stage | Out-Null
@@ -37,9 +41,8 @@ try {
         overview = $overview; owner = 'KsH1'; targetAbi = $TargetAbi; timestamp = $timestamp; version = $Version
     } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $stage 'meta.json') -Encoding utf8
     New-Item -ItemType Directory -Path $repository -Force | Out-Null
-    $zipName = "theme-manager_$Version.zip"
     $zip = Join-Path $repository $zipName
-    if (Test-Path $zip) { throw "$zipName already exists. Published versions are never overwritten; bump -Version." }
+    if (Test-Path $zip) { throw "$zipName already exists. Published versions are never overwritten; bump the version." }
     Compress-Archive -Path (Join-Path $stage '*') -DestinationPath $zip
 }
 finally { Remove-Item -LiteralPath $stage -Recurse -Force }
@@ -50,9 +53,12 @@ $entry = [ordered]@{
     version = $Version; changelog = $Changelog; targetAbi = $TargetAbi; sourceUrl = "$BaseUrl/$zipName"
     checksum = (Get-FileHash -LiteralPath $zip -Algorithm MD5).Hash; timestamp = $timestamp
 }
+# One entry per plugin version and Jellyfin version; Jellyfin offers each server only the entries for its own version.
+$versions = @($entry) + @($existing | Where-Object { -not ($_.version -eq $Version -and $_.targetAbi -eq $TargetAbi) })
+$versions = $versions | Sort-Object -Property @{ Expression = { [version]$_.version }; Descending = $true }, @{ Expression = { [version]$_.targetAbi }; Descending = $true }
 $manifest = @([ordered]@{
     guid = $guid; name = 'Theme Manager'; description = $description; overview = $overview; owner = 'KsH1'; category = 'General'; imageUrl = $imageUrl
-    versions = @($entry) + @($existing | Where-Object version -ne $Version)
+    versions = @($versions)
 })
 ConvertTo-Json -InputObject $manifest -Depth 6 | Set-Content -LiteralPath $manifestPath -Encoding utf8
-Write-Output "Repository updated: $manifestPath ($zipName, MD5 $($entry.checksum))"
+Write-Output "Repository updated: $manifestPath ($zipName for Jellyfin $jellyfin, MD5 $($entry.checksum))"
