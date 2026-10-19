@@ -1,0 +1,10 @@
+**/bin/
+**/obj/
+artifacts/
+test-server/
+ThemePacks/
+*.user
+.packages/
+
+# Local operations log with this server's paths; not published
+docs/PROD-INSTALL.md

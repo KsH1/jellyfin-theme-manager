@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Jellyfin.Plugin.ThemeManager</RootNamespace>
+    <AssemblyName>Jellyfin.Plugin.ThemeManager</AssemblyName>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Jellyfin.Controller" Version="12.2.0" ExcludeAssets="runtime" />
+    <PackageReference Include="Jellyfin.Model" Version="12.2.0" ExcludeAssets="runtime" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="../ThemeManager.Core/ThemeManager.Core.csproj" />
+    <EmbeddedResource Include="Web/*" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,20 @@
+[
+  {
+    "guid": "8fa53208-c9f3-4e99-9858-2963ed658aae",
+    "name": "Theme Manager",
+    "description": "Seasonal and permanent themes, a personal theme per user, library banners and theme packs for Jellyfin Web.",
+    "overview": "Each user chooses their own theme; server branding is not changed. Install File Transformation to show themes in the normal Jellyfin Web address.",
+    "owner": "KsH1",
+    "category": "General",
+    "versions": [
+      {
+        "version": "0.1.0.0",
+        "changelog": "First public preview: personal themes, seasonal calendar, custom calendars, library banners for every library, File Transformation support.",
+        "targetAbi": "12.2.0.0",
+        "sourceUrl": "https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/repository/theme-manager_0.1.0.0.zip",
+        "checksum": "16C4BA0B49B27E175B0642242760FFA6",
+        "timestamp": "2026-10-19T13:24:19Z"
+      }
+    ]
+  }
+]

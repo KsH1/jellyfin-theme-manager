@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html><head><title>Theme Manager</title></head><body>
+<div id="themeManagerPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select">
+  <div data-role="content"><div class="content-primary" style="max-width:1100px;margin:auto">
+    <h1>Theme Manager <small>0.1 · Preview alpha</small></h1>
+    <p>Seasonal artwork, permanent palettes and personal themes for Jellyfin Web. Each user chooses their own theme; server branding, Custom CSS and library images are not changed.</p>
+    <p class="tm-status" role="status" aria-live="polite"></p>
+    <h2>Where users see themes</h2>
+    <p class="tm-web-state" style="padding:1em;border-radius:10px;background:#ffffff10"></p>
+    <label style="display:flex;gap:.5em;align-items:center;margin:.8em 0"><input class="tm-web-enabled" type="checkbox" /> Show themes in the normal Jellyfin Web address (needs the File Transformation plugin)</label>
+    <p>Always available: <a class="tm-web-link" target="_blank" rel="noopener"></a>. TV and mobile apps with their own interface do not show personal themes.</p>
+    <h2>Theme gallery</h2>
+    <label>Preview theme <select class="tm-gallery" is="emby-select" aria-label="Preview theme"></select></label>
+    <section class="tm-preview" style="padding:2em;border-radius:18px;background:#080b12;background-size:cover;background-position:center;min-height:280px;margin:1.5em 0;color:white">
+      <h2 class="tm-title" style="text-shadow:0 2px 8px black"></h2>
+      <p class="tm-kind" style="text-shadow:0 2px 8px black"></p>
+      <div class="tm-banners" style="display:flex;gap:1em;flex-wrap:wrap"></div>
+      <button class="tm-accent" type="button" style="border:0;border-radius:6px;padding:.7em 1.2em;margin-top:1em">Accent preview</button>
+    </section>
+    <h2>My theme preference</h2>
+    <p>Saved to your signed-in Jellyfin account, not this browser. Users choose their own with the Themes button in Jellyfin Web.</p>
+    <label>Mode <select class="tm-user-mode" is="emby-select"><option value="FollowServer">Follow server default</option><option value="Automatic">Automatic Seasonal</option><option value="Fixed">Fixed theme</option><option value="Schedule">Calendar</option><option value="Original">Original Jellyfin</option></select></label>
+    <label>Fixed theme <select class="tm-user-theme" is="emby-select"></select></label>
+    <label>Calendar <select class="tm-user-schedule" is="emby-select"></select></label>
+    <button class="tm-save-user raised button-submit" is="emby-button" type="button">Save my preference</button>
+    <h2>Server default</h2>
+    <label>Mode <select class="tm-server-mode" is="emby-select"><option value="Automatic">Automatic Seasonal</option><option value="Fixed">Fixed theme</option><option value="Schedule">Calendar</option><option value="Original">Original Jellyfin</option></select></label>
+    <label>Fixed theme <select class="tm-server-theme" is="emby-select"></select></label>
+    <label>Calendar <select class="tm-server-schedule" is="emby-select"></select></label>
+    <label style="display:flex;gap:.5em;align-items:center;margin:.8em 0"><input class="tm-allow-personal" type="checkbox" /> Users may make their own personal calendar</label>
+    <label>Calendar time zone <input class="tm-zone" is="emby-input" value="Europe/Copenhagen" /></label>
+    <button class="tm-save-server raised button-submit" is="emby-button" type="button">Save server default</button>
+    <h2>Calendars</h2>
+    <p>Your own "Automatic Seasonal": choose which theme shows on which dates. Shared calendars can be chosen as the server default and by every user.</p>
+    <label>Calendar <select class="tm-schedules" is="emby-select"></select></label>
+    <div class="tm-schedule-editor" style="margin:1em 0"></div>
+    <button class="tm-save-schedule raised button-submit" is="emby-button" type="button">Save calendar</button>
+    <button class="tm-delete-schedule raised" is="emby-button" type="button">Delete calendar</button>
+    <h2>Theme packs</h2>
+    <p>ZIP containing theme.json and PNG/JPEG/WebP artwork. No scripts or external URLs. Existing packs are never overwritten. Import parent packs before their variants.</p>
+    <input class="tm-file" type="file" accept=".zip,application/zip" aria-label="Theme pack ZIP" />
+    <button class="tm-import raised" is="emby-button" type="button">Import ZIP</button>
+    <button class="tm-reload raised" is="emby-button" type="button">Refresh catalog</button>
+    <pre class="tm-problems" style="white-space:pre-wrap"></pre>
+  </div></div>
+  <script>
+  (function () {
+    'use strict';
+    const page = document.querySelector('#themeManagerPage');
+    const el = s => page.querySelector(s);
+    let themes = [], objectUrls = [], generation = 0, schedules = { shared: [], personal: null }, editor = null, editorModule = null;
+    const status = message => { el('.tm-status').textContent = message; };
+    function authHeaders() {
+      // Use the current Jellyfin login. Never persist tokens or put them in image URLs.
+      const device = String(ApiClient.deviceId()).replace(/["\\\r\n]/g, '');
+      const token = String(ApiClient.accessToken()).replace(/["\\\r\n]/g, '');
+      return { Authorization: 'MediaBrowser Client="ThemeManager", Device="Web", DeviceId="' + device + '", Version="0.1.0", Token="' + token + '"' };
+    }
+    async function api(path, method = 'GET', body, zip = false) {
+      const headers = authHeaders();
+      if (body !== undefined) headers['Content-Type'] = zip ? 'application/zip' : 'application/json';
+      const response = await fetch(ApiClient.getUrl('ThemeManager/' + path), { method, headers, body: body === undefined ? undefined : zip ? body : JSON.stringify(body), credentials: 'same-origin' });
+      if (!response.ok) {
+        // Show the server's own explanation (validation errors) when it gives one.
+        const detail = await response.json().catch(() => null);
+        throw new Error(detail?.error || detail?.Error || detail?.detail || 'Request failed (' + response.status + '). Check your login, selected theme or ZIP and the server log.');
+      }
+      return response.status === 204 ? null : response.json();
+    }
+    function release() { generation++; objectUrls.forEach(URL.revokeObjectURL); objectUrls = []; }
+    async function asset(id, slot, current, revision) {
+      // Reduced, revisioned copy: a few hundred KB instead of the full artwork.
+      const response = await fetch(ApiClient.getUrl('ThemeManager/Themes/' + encodeURIComponent(id) + '/Assets/' + slot + '/Preview', { v: revision }), { headers: authHeaders() });
+      if (!response.ok) throw new Error('Artwork is unavailable; refresh the catalog.');
+      const blob = await response.blob();
+      if (current !== generation) return null;
+      const url = URL.createObjectURL(blob); objectUrls.push(url); return url;
+    }
+    async function preview() {
+      release(); const current = generation;
+      const theme = themes.find(t => t.id === el('.tm-gallery').value);
+      el('.tm-banners').replaceChildren();
+      if (!theme) { el('.tm-title').textContent = 'No themes installed'; return; }
+      const panel = el('.tm-preview');
+      panel.style.backgroundImage = 'none'; panel.style.backgroundColor = theme.palette.background;
+      panel.style.color = theme.palette.text;
+      el('.tm-title').textContent = theme.name;
+      el('.tm-kind').textContent = theme.category + (Object.keys(theme.assets).length ? ' · Artwork included' : ' · Palette preset — bespoke artwork pending');
+      el('.tm-accent').style.background = theme.palette.accent;
+      el('.tm-accent').style.color = '#080b12';
+      await Promise.all(['background', 'collections', 'movies', 'tvShows'].map(async slot => {
+        if (!theme.assets[slot]) return;
+        const url = await asset(theme.id, slot, current, theme.assets[slot].revision); if (!url || current !== generation) return;
+        if (slot === 'background') panel.style.backgroundImage = 'linear-gradient(#0005,#0008),url("' + url + '")';
+        else {
+          const img = document.createElement('img'); img.src = url; img.alt = { collections: 'Collections', movies: 'Movies', tvShows: 'TV Shows' }[slot];
+          img.style.cssText = 'width:30%;min-width:160px;aspect-ratio:16/9;object-fit:cover;border-radius:10px';
+          img.dataset.slot = slot; el('.tm-banners').appendChild(img);
+          const order = ['collections', 'movies', 'tvShows'];
+          [...el('.tm-banners').children].sort((a,b) => order.indexOf(a.dataset.slot) - order.indexOf(b.dataset.slot)).forEach(n => el('.tm-banners').appendChild(n));
+        }
+      }));
+    }
+    function choices(selector) {
+      const select = el(selector), previous = select.value; select.replaceChildren();
+      themes.forEach(t => { const option = document.createElement('option'); option.value = t.id; option.textContent = t.name; select.appendChild(option); });
+      if (themes.some(t => t.id === previous)) select.value = previous;
+    }
+    function modeControls() {
+      el('.tm-user-theme').disabled = el('.tm-user-mode').value !== 'Fixed';
+      el('.tm-server-theme').disabled = el('.tm-server-mode').value !== 'Fixed';
+      el('.tm-user-schedule').disabled = el('.tm-user-mode').value !== 'Schedule';
+      el('.tm-server-schedule').disabled = el('.tm-server-mode').value !== 'Schedule';
+    }
+    function fill(select, entries, value) {
+      select.replaceChildren(...entries.map(([id, name]) => { const o = document.createElement('option'); o.value = id; o.textContent = name; return o; }));
+      if (entries.some(([id]) => id === value)) select.value = value;
+    }
+    async function openEditor(id) {
+      if (!editorModule) {
+        editorModule = await import(ApiClient.getUrl('ThemeManager/Client/schedule-editor.mjs'));
+        const style = document.createElement('style'); style.textContent = editorModule.scheduleEditorCss; page.appendChild(style);
+      }
+      const schedule = schedules.shared.find(s => s.id === id) || null;
+      editor = editorModule.createScheduleEditor(el('.tm-schedule-editor'), {
+        themes, schedule, showId: true,
+        test: (value, from) => api('Schedules/Test', 'POST', { schedule: value, from }),
+      });
+      editor.lockId(!!schedule); el('.tm-delete-schedule').disabled = !schedule;
+    }
+    async function load() {
+      const [catalog, settings, mine, effective, all] = await Promise.all([api('Catalog'), api('Admin/Settings'), api('Me'), api('Effective'), api('Schedules')]);
+      themes = catalog.themes; schedules = all;
+      const shared = all.shared.map(s => [s.id, s.name]);
+      fill(el('.tm-server-schedule'), shared, settings.choice.scheduleId);
+      fill(el('.tm-user-schedule'), all.personal ? [...shared, ['personal', 'My own calendar']] : shared, mine.scheduleId);
+      const editing = el('.tm-schedules').value;
+      fill(el('.tm-schedules'), [['', '+ New calendar'], ...shared], editing);
+      el('.tm-allow-personal').checked = settings.allowPersonalSchedules;
+      await openEditor(el('.tm-schedules').value);
+      ['.tm-gallery', '.tm-user-theme', '.tm-server-theme'].forEach(choices);
+      el('.tm-user-mode').value = mine.mode; el('.tm-user-theme').value = mine.themeId || themes[0]?.id || '';
+      el('.tm-server-mode').value = settings.choice.mode; el('.tm-server-theme').value = settings.choice.themeId || themes[0]?.id || '';
+      el('.tm-zone').value = settings.timeZoneId;
+      if (effective.resolution.themeId) el('.tm-gallery').value = effective.resolution.themeId;
+      status(themes.length + ' themes · Calendar date: ' + effective.localDate + ' · Effective choice: ' + (effective.theme?.name || 'Original Jellyfin'));
+      modeControls(); await preview();
+    }
+    async function webClient() {
+      const web = await api('Admin/WebClient');
+      const link = ApiClient.getUrl('web/theme-manager.html');
+      el('.tm-web-link').href = link; el('.tm-web-link').textContent = link;
+      el('.tm-web-enabled').checked = web.enabled;
+      el('.tm-web-enabled').disabled = web.state !== 'Registered';
+      el('.tm-web-state').textContent = {
+        Registered: web.enabled
+          ? 'Active: themes show in the normal Jellyfin Web address (' + web.detail + '). ' + (web.lastServed ? 'Last added to a page: ' + new Date(web.lastServed).toLocaleString() + '.' : 'Open Jellyfin Web in a new tab to start.')
+          : 'Off: themes show only at the address below.',
+        FileTransformationMissing: 'Not active: install "File Transformation" from the repository https://www.iamparadox.dev/jellyfin/plugins/manifest.json (Dashboard → Plugins → Repositories), then stop and start Jellyfin completely. Until then users open the address below.',
+        Failed: 'Not active: ' + (web.detail || 'File Transformation could not be used') + '. Users can open the address below; details are in the server log.',
+        NotChecked: 'Checking… The "Show theme in Jellyfin Web" task runs at server start.',
+      }[web.state] || web.state;
+    }
+    function run(fn) { return async function () { try { await fn(); } catch (error) { status(error.message); } }; }
+    el('.tm-web-enabled').addEventListener('change', run(async () => {
+      await api('Admin/WebClient', 'PUT', { enabled: el('.tm-web-enabled').checked }); await webClient();
+      status('Saved. Users see the change after reloading Jellyfin Web.');
+    }));
+    el('.tm-gallery').addEventListener('change', run(preview));
+    ['.tm-user-mode', '.tm-server-mode'].forEach(s => el(s).addEventListener('change', modeControls));
+    el('.tm-save-user').addEventListener('click', run(async () => {
+      const mode = el('.tm-user-mode').value;
+      await api('Me', 'PUT', { mode, themeId: mode === 'Fixed' ? el('.tm-user-theme').value : null, scheduleId: mode === 'Schedule' ? el('.tm-user-schedule').value : null });
+      await load(); status('Your preference is saved. Preview-only alpha: the home screen is unchanged.');
+    }));
+    el('.tm-save-server').addEventListener('click', run(async () => {
+      const mode = el('.tm-server-mode').value;
+      await api('Admin/Settings', 'PUT', { choice: { mode, themeId: mode === 'Fixed' ? el('.tm-server-theme').value : null, scheduleId: mode === 'Schedule' ? el('.tm-server-schedule').value : null }, timeZoneId: el('.tm-zone').value, allowPersonalSchedules: el('.tm-allow-personal').checked });
+      await load(); status('Server default saved. Existing branding is unchanged.');
+    }));
+    el('.tm-schedules').addEventListener('change', run(() => openEditor(el('.tm-schedules').value)));
+    el('.tm-save-schedule').addEventListener('click', run(async () => {
+      const value = editor.value();
+      if (!value.id) throw new Error('Give the calendar a name (and id) first.');
+      await api('Admin/Schedules/' + encodeURIComponent(value.id), 'PUT', value);
+      el('.tm-schedules').value = value.id; await load(); el('.tm-schedules').value = value.id; await openEditor(value.id);
+      status('Calendar "' + value.name + '" saved. Choose it as the server default or let users pick it.');
+    }));
+    el('.tm-delete-schedule').addEventListener('click', run(async () => {
+      const id = el('.tm-schedules').value; if (!id) return;
+      if (!confirm('Delete this calendar? Users who chose it go back to Automatic Seasonal.')) return;
+      await api('Admin/Schedules/' + encodeURIComponent(id), 'DELETE');
+      el('.tm-schedules').value = ''; await load(); status('Calendar deleted.');
+    }));
+    el('.tm-reload').addEventListener('click', run(async () => {
+      const result = await api('Admin/Reload', 'POST'); await load();
+      el('.tm-problems').textContent = result.problems.map(p => p.pack + ': ' + p.message).join('\n');
+    }));
+    el('.tm-import').addEventListener('click', run(async () => {
+      const file = el('.tm-file').files[0]; if (!file) throw new Error('Select a theme ZIP first.');
+      if (file.size > 32 * 1024 * 1024) throw new Error('ZIP limit: 32 MiB.');
+      status('Importing theme…'); await api('Admin/Import', 'POST', file, true); await load();
+    }));
+    page.addEventListener('viewshow', run(load));
+    page.addEventListener('viewshow', run(webClient));
+    page.addEventListener('viewhide', release);
+  }());
+  </script>
+</div></body></html>

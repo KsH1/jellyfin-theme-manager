@@ -1,0 +1,29 @@
+/* Every rule is gated by our own attribute; removing it restores Jellyfin's styles. */
+html[data-tm-theme] { background-color: var(--tm-background) !important; }
+html[data-tm-theme] body .backgroundContainer:not(.withBackdrop) {
+    background: linear-gradient(180deg, #0005, #0009), var(--tm-background-image, none) center / cover fixed, var(--tm-background) !important;
+}
+html[data-tm-theme] body .skinHeader:not(.osdHeader) { background: color-mix(in srgb, var(--tm-surface) 88%, transparent) !important; }
+html[data-tm-theme] body .mainDrawer { background: var(--tm-surface) !important; }
+html[data-tm-theme] body .button-submit, html[data-tm-theme] body .raised.button-accent,
+html[data-tm-theme] body .countIndicator { background: var(--tm-accent) !important; color: var(--tm-accent-contrast) !important; }
+html[data-tm-theme] body .paper-icon-button-light:focus-visible { outline: 2px solid var(--tm-accent); outline-offset: 3px; }
+/* Jellyfin already positions .cardContent absolutely; overriding it collapses the card to 0px. */
+html[data-tm-theme] body .cardImageContainer[data-tm-card]::after {
+    content: ''; position: absolute; inset: 0; border-radius: inherit; background: var(--tm-card-art) center / cover;
+    pointer-events: none; z-index: 0;
+}
+html[data-tm-theme] body .cardImageContainer[data-tm-card] .cardOverlayContainer { z-index: 2; }
+/* Generic banner for any library without themed art: a slice of the theme background plus the library name. */
+html[data-tm-theme] body .cardImageContainer[data-tm-card=generic] { container-type: inline-size; }
+html[data-tm-theme] body .cardImageContainer[data-tm-card=generic]::after {
+    /* Zoomed so --tm-card-x picks a different slice per library; 70% favours the scenery over the sky. */
+    background: radial-gradient(ellipse at center, #0002, #0008), var(--tm-card-art) var(--tm-card-x, 50%) 70% / 170% auto, var(--tm-background);
+}
+html[data-tm-theme] body .cardImageContainer[data-tm-card=generic]::before {
+    content: attr(data-tm-label); position: absolute; inset: 0; z-index: 1; display: flex; align-items: center; justify-content: center;
+    padding: 0 8%; text-align: center; color: #fff; pointer-events: none; overflow: hidden; overflow-wrap: anywhere;
+    font: 800 clamp(13px, 10cqw, 34px) / 1.05 system-ui, sans-serif; text-transform: uppercase; letter-spacing: .04em;
+    text-shadow: 0 0 .5em var(--tm-accent), 0 .08em .25em #000;
+}
+@media (prefers-reduced-motion: reduce) { html[data-tm-theme] body .backgroundContainer { background-attachment: scroll !important; } }

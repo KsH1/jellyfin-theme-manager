@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "sample-ocean",
+  "name": "Sample Ocean",
+  "version": "1.0.0",
+  "author": "Local",
+  "category": "Custom",
+  "palette": {
+    "accent": "#68e0d8",
+    "secondary": "#6095df",
+    "surface": "#101722",
+    "text": "#ffffff",
+    "background": "#06151e"
+  },
+  "assets": {}
+}

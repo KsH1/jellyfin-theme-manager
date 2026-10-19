@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Jellyfin.Plugin.ThemeManager/Jellyfin.Plugin.ThemeManager.csproj" />
+    <Project Path="src/ThemeManager.Core/ThemeManager.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ThemeManager.Tests/ThemeManager.Tests.csproj" />
+  </Folder>
+</Solution>
