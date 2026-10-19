@@ -139,6 +139,7 @@ To rebuild the standard packs from full-size PNGs: `python scripts/convert_packs
 - Theme management on the settings page: hide a theme from the picker, export it as ZIP, replace it with a new version, or delete it. Deleted and replaced versions are kept on the server.
 - Library banners for TV and mobile apps from the server default theme, with backup and exact restore of the original images (off by default).
 - Seasonal effects (snow, leaves, hearts, confetti) that users and administrators can switch off.
+- The theme's colours in the video player too (sliders, buttons, menus and the fades behind the controls), with nothing laid over the video itself.
 - A status panel on the settings page that also tells you when a newer version is installed but needs Jellyfin to be stopped and started.
 - Fail-safe: a broken pack or plugin error never stops Jellyfin; the reason goes to the server log.
 

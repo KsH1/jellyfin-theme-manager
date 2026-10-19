@@ -77,6 +77,8 @@ export function paletteVariables(palette) {
     const rgb = result['--tm-accent'].slice(1).match(/../g).map(v => parseInt(v, 16) / 255).map(v => v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4);
     const luminance = .2126 * rgb[0] + .7152 * rgb[1] + .0722 * rgb[2];
     result['--tm-accent-contrast'] = luminance > .179 ? '#000000' : '#ffffff';
+    // Jellyfin's palette uses "R G B" channels for its translucent hover and selection colours.
+    result['--tm-accent-channel'] = result['--tm-accent'].slice(1).match(/../g).map(v => parseInt(v, 16)).join(' ');
     return result;
 }
 
@@ -118,6 +120,11 @@ export class ImageSet {
         } catch (error) { this.dispose(); throw error; }
     }
     dispose() { for (const url of Object.values(this.urls)) URL.revokeObjectURL(url); this.urls = {}; }
+}
+
+// The video player: the page theme is off here, only the accent colour stays on sliders and menus.
+export function isPlayback(hash) {
+    return /^#!?\/(?:video|videoplayer|fullscreenvideo)(?:[/?]|$)/i.test(hash);
 }
 
 export function isPublicOrPlayback(hash) {

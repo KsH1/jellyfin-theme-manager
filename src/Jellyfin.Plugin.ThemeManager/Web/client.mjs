@@ -1,4 +1,4 @@
-import { Generation, ImageSet, effectFor, effectsStorageKey, effectsWanted, isAdminPage, isDocumentPageHide, isPublicOrPlayback, librarySlots, normalizeId, paletteVariables, readSession, request, sameSession, themeSignature } from './client-core.mjs';
+import { Generation, ImageSet, effectFor, effectsStorageKey, effectsWanted, isAdminPage, isDocumentPageHide, isPlayback, isPublicOrPlayback, librarySlots, normalizeId, paletteVariables, readSession, request, sameSession, themeSignature } from './client-core.mjs';
 import { createEffects } from './effects.mjs';
 import { createPicker } from './theme-picker.mjs';
 
@@ -18,23 +18,33 @@ function showEffect() { effects.set(activeTheme && !isHidden() && !isAdminPage(l
 const picker = createPicker(current, async () => { nextRefresh = 0; await sync(true); }, showEffect);
 picker.available(false);
 
-function clearDecoration() {
+// Two layers: the palette (data-tm-accent, also in the player) and the page theme (data-tm-theme: background, cards, effects).
+function clearPage() {
     delete document.documentElement.dataset.tmTheme;
-    for (const name of ['accent', 'secondary', 'surface', 'text', 'background', 'accent-contrast', 'background-image']) document.documentElement.style.removeProperty('--tm-' + name);
+    document.documentElement.style.removeProperty('--tm-background-image');
     for (const image of decorated) { delete image.dataset.tmCard; delete image.dataset.tmLabel; image.style.removeProperty('--tm-card-art'); image.style.removeProperty('--tm-card-x'); }
     decorated.clear();
     effects.set(null);
+}
+function clearDecoration() {
+    clearPage();
+    delete document.documentElement.dataset.tmAccent;
+    for (const name of ['accent', 'secondary', 'surface', 'text', 'background', 'accent-contrast', 'accent-channel']) document.documentElement.style.removeProperty('--tm-' + name);
 }
 function reset() {
     guard.cancel(); clearDecoration(); images?.dispose(); images = null; activeTheme = null; signature = ''; libraryMap = new Map();
     inFlight = false; nextRefresh = 0; picker.reset();
 }
 function isHidden() { return isPublicOrPlayback(location.hash) || !!document.fullscreenElement; }
+function isPlaying() { return isPlayback(location.hash) || !!document.fullscreenElement; }
 function decorate() {
-    if (!activeTheme || isHidden()) { clearDecoration(); return; }
+    if (!activeTheme || (isHidden() && !isPlaying())) { clearDecoration(); return; }
     const html = document.documentElement;
-    html.dataset.tmTheme = activeTheme.id;
     for (const [key, value] of Object.entries(paletteVariables(activeTheme.palette))) html.style.setProperty(key, value);
+    html.dataset.tmAccent = activeTheme.id;
+    // Never anything over the video: in the player only the accent colour remains.
+    if (isHidden()) { clearPage(); return; }
+    html.dataset.tmTheme = activeTheme.id;
     if (images?.urls.background) html.style.setProperty('--tm-background-image', 'url("' + images.urls.background + '")');
     // Only the user's library/view IDs are changed. Posters for episodes and films are untouched.
     for (const card of document.querySelectorAll('.card[data-id]')) {
@@ -62,7 +72,7 @@ async function sync(force = false) {
     if (!sameSession(found, session)) { reset(); session = found; }
     picker.available(!!session && !isHidden());
     if (!session) return;
-    if (isHidden()) { clearDecoration(); return; }
+    if (isHidden()) { decorate(); return; }
     if ((!force && Date.now() < nextRefresh) || inFlight) { decorate(); return; }
     const captured = session, job = guard.begin(); inFlight = true;
     let pendingImages = null;

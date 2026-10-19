@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Generation, ImageSet, isDocumentPageHide, isPublicOrPlayback, librarySlots, paletteVariables, readSession, request, sameSession, themeSignature } from '../../src/Jellyfin.Plugin.ThemeManager/Web/client-core.mjs';
+import { Generation, ImageSet, isDocumentPageHide, isPlayback, isPublicOrPlayback, librarySlots, paletteVariables, readSession, request, sameSession, themeSignature } from '../../src/Jellyfin.Plugin.ThemeManager/Web/client-core.mjs';
 
 const user = '0123456789abcdef0123456789abcdef';
 const api = (overrides = {}) => ({ accessToken: () => 'test-token', getCurrentUserId: () => user, deviceId: () => 'test-device', getUrl: path => 'https://server.test/jellyfin/' + path, ...overrides });
@@ -69,6 +69,7 @@ test('palette rejects CSS injection and computes contrast', () => {
     assert.equal(values['--tm-accent'], '#00a4dc'); assert.equal(values['--tm-text'], '#123456'); assert.equal(values['--tm-background'], '#080b12');
     assert.equal(paletteVariables({ accent: '#ffffff' })['--tm-accent-contrast'], '#000000');
     assert.equal(paletteVariables({ accent: '#000000' })['--tm-accent-contrast'], '#ffffff');
+    assert.equal(paletteVariables({ accent: '#ff983f' })['--tm-accent-channel'], '255 152 63');
 });
 test('a changed image revision invalidates the theme signature', () => {
     const theme = { id: 'ocean', palette: {}, assets: { background: { revision: 'one' } } };
@@ -210,5 +211,18 @@ test('client.css themes the grey surfaces of both Jellyfin layouts', async () =>
     const css = await readFile(new URL('../../src/Jellyfin.Plugin.ThemeManager/Web/client.css', import.meta.url), 'utf8');
     // Found by scanning Jellyfin 12.2 Web (new and old layout) for Jellyfin's own grey backgrounds.
     for (const selector of ['.skinHeader', '.MuiAppBar-colorDefault', '.mainDrawer', '.MuiDrawer-paper', '.MuiPopover-paper', '.MuiMenu-paper', '.MuiDialog-paper', '.dialog', '.actionSheet', '.detailPageWrapperContainer', '.detailRibbon'])
-        assert.match(css, new RegExp('html\\[data-tm-theme\\] body [^{]*' + selector.replace('.', '\\.') + '\\b'), selector);
+        assert.match(css, new RegExp('html\\[data-tm-(?:theme|accent)\\] body [^{]*' + selector.replace('.', '\\.') + '\\b'), selector);
+});
+test('the player keeps only the accent colour; other hidden pages get nothing', () => {
+    for (const path of ['#/video', '#!/videoplayer?id=1', '#/fullscreenvideo']) assert.equal(isPlayback(path), true, path);
+    for (const path of ['#/login', '#/home', '#/details?id=1', '#/videos']) assert.equal(isPlayback(path), false, path);
+});
+test('client.css themes the player sliders with the accent colour', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const css = await readFile(new URL('../../src/Jellyfin.Plugin.ThemeManager/Web/client.css', import.meta.url), 'utf8');
+    for (const selector of ['.mdl-slider-background-lower', '.mdl-slider::-webkit-slider-thumb', '--jf-palette-primary-main', '.osdHeader', '.videoOsdBottom']) assert.ok(css.includes(selector), selector);
+    // Nothing gated by the accent layer may paint the page background, cards or the page header over the video;
+    // the player's own title bar (osdHeader) and control fades are the only exceptions.
+    assert.doesNotMatch(css, /data-tm-accent\][^{]*(?:backgroundContainer|cardImageContainer|skinHeader(?!-withBackground\.osdHeader))/);
+    assert.doesNotMatch(css, /data-tm-accent\][^{]*(?:video|htmlvideoplayer)\b[^{]*\{/i);
 });
