@@ -9,7 +9,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $guid = '8fa53208-c9f3-4e99-9858-2963ed658aae'
-$latest = (Invoke-RestMethod $RepositoryUrl)[0].versions[0].version
+$latest = (Invoke-RestMethod $RepositoryUrl -Headers @{ 'Cache-Control' = 'no-cache' })[0].versions[0].version  # raw.githubusercontent.com caches for a few minutes
 $webRoot = Join-Path ([IO.Path]::GetDirectoryName($JellyfinExecutable)) 'jellyfin-web'
 $runRoot = Join-Path $projectRoot ('test-server\catalog-' + [Guid]::NewGuid().ToString('N').Substring(0, 8))
 $configRoot = Join-Path $runRoot 'config'
