@@ -5,6 +5,12 @@ html[data-tm-theme] body .backgroundContainer:not(.withBackdrop) {
 }
 html[data-tm-theme] body .skinHeader:not(.osdHeader) { background: color-mix(in srgb, var(--tm-surface) 88%, transparent) !important; }
 html[data-tm-theme] body .mainDrawer { background: var(--tm-surface) !important; }
+/* Jellyfin's new layout: the app bar is transparent at the top and turns grey (colorDefault) once the page scrolls. */
+html[data-tm-theme] body .MuiAppBar-root.MuiAppBar-colorDefault {
+    background: color-mix(in srgb, var(--tm-surface) 72%, transparent) !important;
+    -webkit-backdrop-filter: blur(14px) saturate(120%); backdrop-filter: blur(14px) saturate(120%);
+}
+html[data-tm-theme] body .MuiDrawer-paper { background: var(--tm-surface) !important; }
 html[data-tm-theme] body .button-submit, html[data-tm-theme] body .raised.button-accent,
 html[data-tm-theme] body .countIndicator { background: var(--tm-accent) !important; color: var(--tm-accent-contrast) !important; }
 html[data-tm-theme] body .paper-icon-button-light:focus-visible { outline: 2px solid var(--tm-accent); outline-offset: 3px; }

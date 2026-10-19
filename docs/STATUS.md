@@ -1,6 +1,6 @@
 # Development status
 
-Updated 19 October 2026 for version 0.3.0.0 (preview). User documentation is in the [README](../README.md) and [CUSTOM-THEMES.md](CUSTOM-THEMES.md).
+Updated 19 October 2026 for version 0.3.1.0 (preview). User documentation is in the [README](../README.md) and [CUSTOM-THEMES.md](CUSTOM-THEMES.md).
 
 ## Supported
 
