@@ -205,3 +205,10 @@ test('effects stay off on dashboard and plugin settings pages', async () => {
     for (const hash of ['#/dashboard', '#/dashboard/plugins', '#/configurationpage?name=theme-manager', '#!/dashboard']) assert.equal(isAdminPage(hash), true, hash);
     for (const hash of ['#/home', '#/movies?topParentId=1', '#/details?id=2', '']) assert.equal(isAdminPage(hash), false, hash);
 });
+test('client.css themes the grey surfaces of both Jellyfin layouts', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const css = await readFile(new URL('../../src/Jellyfin.Plugin.ThemeManager/Web/client.css', import.meta.url), 'utf8');
+    // Found by scanning Jellyfin 12.2 Web (new and old layout) for Jellyfin's own grey backgrounds.
+    for (const selector of ['.skinHeader', '.MuiAppBar-colorDefault', '.mainDrawer', '.MuiDrawer-paper', '.MuiPopover-paper', '.MuiMenu-paper', '.MuiDialog-paper', '.dialog', '.actionSheet', '.detailPageWrapperContainer', '.detailRibbon'])
+        assert.match(css, new RegExp('html\\[data-tm-theme\\] body [^{]*' + selector.replace('.', '\\.') + '\\b'), selector);
+});

@@ -1,6 +1,6 @@
 # Development status
 
-Updated 19 October 2026 for version 0.3.1.0 (preview). User documentation is in the [README](../README.md) and [CUSTOM-THEMES.md](CUSTOM-THEMES.md).
+Updated 19 October 2026 for version 0.3.2.0 (preview). User documentation is in the [README](../README.md) and [CUSTOM-THEMES.md](CUSTOM-THEMES.md).
 
 ## Supported
 
@@ -30,12 +30,14 @@ Every test below starts its own Jellyfin with empty data on a loopback port; non
 | Test | Result (19 October 2026) |
 |---|---|
 | Unit tests (`dotnet test`) | 102 passed |
-| Client tests (`node --test tests/client/core.test.mjs`) | 29 passed |
+| Client tests (`node --test tests/client/core.test.mjs`) | 30 passed |
 | `Test-IsolatedServer.ps1` (API, access rules, import, theme management, previews, holidays, effects default) | 67 checks passed on 12.2 |
 | `Test-ServerImages.ps1` (app images, per-library banners, restore) | 22 checks passed on 12.2 |
 | `Test-WebInjection.ps1` (File Transformation, stale browser cache) | 25 checks passed on 12.2 |
 | `Test-DefaultPacks.ps1` | 9 checks passed |
 | `Test-CatalogInstall.ps1` (install from the published repository) | 0.3.0.0 from the GitHub release: 7 checks passed on 12.2. Earlier versions also passed on 12.0; 12.1 confirmed on a real 12.1 server |
+
+Jellyfin Web's new layout (MUI app bar, menus, dialogs) was checked page by page in a real browser on 19 October 2026: home, library, item details, search, favourites, settings, Live TV, queue, the item menu and the user menu. The surfaces found are listed in a client test.
 
 Not verified: Linux and Docker hosts, Firefox and Safari, two users in parallel browsers, keyboard navigation and contrast across the whole picker, native apps beyond library images.
 

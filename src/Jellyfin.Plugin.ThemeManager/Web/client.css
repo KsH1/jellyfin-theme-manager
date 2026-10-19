@@ -10,7 +10,12 @@ html[data-tm-theme] body .MuiAppBar-root.MuiAppBar-colorDefault {
     background: color-mix(in srgb, var(--tm-surface) 72%, transparent) !important;
     -webkit-backdrop-filter: blur(14px) saturate(120%); backdrop-filter: blur(14px) saturate(120%);
 }
-html[data-tm-theme] body .MuiDrawer-paper { background: var(--tm-surface) !important; }
+/* Menus and dialogs: MUI popovers in the new layout, Jellyfin's own dialogs and action sheets in both layouts. */
+html[data-tm-theme] body .MuiDrawer-paper, html[data-tm-theme] body .MuiPopover-paper, html[data-tm-theme] body .MuiMenu-paper,
+html[data-tm-theme] body .MuiDialog-paper, html[data-tm-theme] body .dialog, html[data-tm-theme] body .actionSheet { background: var(--tm-surface) !important; }
+/* Item pages keep the item's own backdrop at the top; only the grey area below it takes the theme. */
+html[data-tm-theme] body .detailPageWrapperContainer { background: color-mix(in srgb, var(--tm-background) 90%, transparent) !important; }
+html[data-tm-theme] body .detailRibbon { background: color-mix(in srgb, var(--tm-surface) 80%, transparent) !important; }
 html[data-tm-theme] body .button-submit, html[data-tm-theme] body .raised.button-accent,
 html[data-tm-theme] body .countIndicator { background: var(--tm-accent) !important; color: var(--tm-accent-contrast) !important; }
 html[data-tm-theme] body .paper-icon-button-light:focus-visible { outline: 2px solid var(--tm-accent); outline-offset: 3px; }
