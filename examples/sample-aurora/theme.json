@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "sample-aurora",
+  "name": "Sample Aurora",
+  "version": "1.0.0",
+  "author": "Theme Manager example",
+  "category": "Custom",
+  "palette": {
+    "accent": "#5cf0b4",
+    "secondary": "#a06cff",
+    "surface": "#0c1a28",
+    "text": "#f2fffb",
+    "background": "#06101c"
+  },
+  "assets": {
+    "background": "background.webp",
+    "movies": "movies.webp",
+    "tvShows": "tv-shows.webp",
+    "collections": "collections.webp"
+  }
+}
