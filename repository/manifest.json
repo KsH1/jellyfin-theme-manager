@@ -6,7 +6,16 @@
     "overview": "Each user chooses their own theme; server branding is not changed. Install File Transformation to show themes in the normal Jellyfin Web address.",
     "owner": "KsH1",
     "category": "General",
+    "imageUrl": "https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/logo.png",
     "versions": [
+      {
+        "version": "0.2.2.0",
+        "changelog": "Adds the plugin logo.",
+        "targetAbi": "12.2.0.0",
+        "sourceUrl": "https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/repository/theme-manager_0.2.2.0.zip",
+        "checksum": "424942C2D509F281397FF618A69E3287",
+        "timestamp": "2026-10-19T14:54:21Z"
+      },
       {
         "version": "0.2.1.0",
         "changelog": "Updated texts: the admin page and plugin description no longer call the plugin an alpha that leaves the home screen unchanged.",

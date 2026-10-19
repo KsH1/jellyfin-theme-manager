@@ -1,5 +1,7 @@
 # Theme Manager for Jellyfin
 
+![Theme Manager](logo.png)
+
 Seasonal and permanent themes for Jellyfin Web. Each user picks their own theme (or follows the server default or a calendar); library cards get themed banners, including a generic banner with the library's name for any library. Server branding, Custom CSS and library images are not changed.
 
 **Status:** preview alpha 0.1.0.0, for **Jellyfin 12.2** only (other versions are not built or tested).
