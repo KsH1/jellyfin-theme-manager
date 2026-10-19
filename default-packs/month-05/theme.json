@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "month-05",
+  "name": "May",
+  "version": "1.0.0",
+  "author": "Local artwork",
+  "category": "Calendar",
+  "calendar": {
+    "priority": 0,
+    "month": 5,
+    "kind": "Month"
+  },
+  "palette": {
+    "accent": "#65e2ba",
+    "surface": "#101722",
+    "secondary": "#c08ce5",
+    "text": "#ffffff",
+    "background": "#080b12"
+  },
+  "assets": {
+    "background": "background.webp",
+    "movies": "movies.webp",
+    "collections": "collections.webp",
+    "thumbnail": "background.webp",
+    "splash": "background.webp",
+    "tvShows": "tv-shows.webp"
+  }
+}

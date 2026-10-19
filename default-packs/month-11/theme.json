@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "month-11",
+  "name": "November",
+  "version": "1.0.0",
+  "author": "Local artwork",
+  "category": "Calendar",
+  "calendar": {
+    "priority": 0,
+    "month": 11,
+    "kind": "Month"
+  },
+  "palette": {
+    "accent": "#75c9dc",
+    "surface": "#101722",
+    "secondary": "#dc9854",
+    "text": "#ffffff",
+    "background": "#080b12"
+  },
+  "assets": {
+    "background": "background.webp",
+    "movies": "movies.webp",
+    "collections": "collections.webp",
+    "thumbnail": "background.webp",
+    "splash": "background.webp",
+    "tvShows": "tv-shows.webp"
+  }
+}

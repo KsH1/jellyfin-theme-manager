@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "fastelavn",
+  "name": "Fastelavn",
+  "version": "1.0.0",
+  "author": "Local artwork",
+  "category": "Calendar",
+  "calendar": {
+    "priority": 80,
+    "startOffset": -51,
+    "kind": "EasterOffset",
+    "endOffset": -49
+  },
+  "palette": {
+    "accent": "#b594ff",
+    "surface": "#101722",
+    "secondary": "#ffcc70",
+    "text": "#ffffff",
+    "background": "#080b12"
+  },
+  "assets": {
+    "background": "background.webp",
+    "movies": "movies.webp",
+    "collections": "collections.webp",
+    "thumbnail": "background.webp",
+    "splash": "background.webp",
+    "tvShows": "tv-shows.webp"
+  }
+}

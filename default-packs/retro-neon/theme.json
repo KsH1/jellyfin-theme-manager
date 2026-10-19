@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "retro-neon",
+  "name": "Retro Neon",
+  "version": "0.1.0",
+  "author": "Local",
+  "category": "Permanent",
+  "palette": {
+    "accent": "#ed72fb",
+    "surface": "#151922",
+    "secondary": "#62e4ee",
+    "text": "#ffffff",
+    "background": "#170b2b"
+  },
+  "assets": {}
+}

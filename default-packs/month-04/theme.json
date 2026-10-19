@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "month-04",
+  "name": "April",
+  "version": "1.0.0",
+  "author": "Local artwork",
+  "category": "Calendar",
+  "calendar": {
+    "priority": 0,
+    "month": 4,
+    "kind": "Month"
+  },
+  "palette": {
+    "accent": "#76dfc3",
+    "surface": "#101722",
+    "secondary": "#e0c25d",
+    "text": "#ffffff",
+    "background": "#080b12"
+  },
+  "assets": {
+    "background": "background.webp",
+    "movies": "movies.webp",
+    "collections": "collections.webp",
+    "thumbnail": "background.webp",
+    "splash": "background.webp",
+    "tvShows": "tv-shows.webp"
+  }
+}

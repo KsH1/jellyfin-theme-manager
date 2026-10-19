@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "cinematic-night",
+  "name": "Cinematic Night",
+  "version": "0.1.0",
+  "author": "Local",
+  "category": "Permanent",
+  "palette": {
+    "accent": "#c9a66b",
+    "surface": "#151922",
+    "secondary": "#8b7bd8",
+    "text": "#ffffff",
+    "background": "#090913"
+  },
+  "assets": {}
+}

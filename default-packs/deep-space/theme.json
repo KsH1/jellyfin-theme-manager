@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "deep-space",
+  "name": "Deep Space",
+  "version": "0.1.0",
+  "author": "Local",
+  "category": "Permanent",
+  "palette": {
+    "accent": "#63d5ff",
+    "surface": "#151922",
+    "secondary": "#9377ff",
+    "text": "#ffffff",
+    "background": "#060b1e"
+  },
+  "assets": {}
+}

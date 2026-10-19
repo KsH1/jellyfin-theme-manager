@@ -13,7 +13,9 @@ Seasonal and permanent themes for Jellyfin Web. Each user picks their own theme 
 4. **Stop and start Jellyfin completely.** The dashboard's Restart keeps already loaded plugin DLLs, so a plugin update needs a full stop/start.
 5. Dashboard → Plugins → Theme Manager to choose the server default and import theme packs (ZIP, see `docs/THEME-PACKS.md`). Users choose their own theme with the **Themes** button in Jellyfin Web.
 
-Theme artwork is not included in the plugin yet; a theme gallery is planned (`docs/INSTALL-ANYWHERE-PLAN.md`). TV and mobile apps with their own interface do not show personal themes.
+The plugin ships 29 standard themes (`default-packs/`): 19 calendar themes with artwork (months and holidays) and 10 colour themes. They are copied into the server's theme folder on first start. A pack that already exists is never overwritten, and a standard pack an administrator deletes is not brought back. TV and mobile apps with their own interface do not show personal themes.
+
+To rebuild the standard packs from full-size PNGs: `python scripts/convert_packs_to_webp.py` (needs Pillow).
 
 ---
 

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "epic-fantasy",
+  "name": "Epic Fantasy",
+  "version": "0.1.0",
+  "author": "Local",
+  "category": "Permanent",
+  "palette": {
+    "accent": "#d9bd73",
+    "surface": "#151922",
+    "secondary": "#78c1bb",
+    "text": "#ffffff",
+    "background": "#0b1618"
+  },
+  "assets": {}
+}

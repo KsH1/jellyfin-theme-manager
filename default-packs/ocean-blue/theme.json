@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "ocean-blue",
+  "name": "Ocean Blue",
+  "version": "0.1.0",
+  "author": "Local",
+  "category": "Permanent",
+  "palette": {
+    "accent": "#68e0d8",
+    "surface": "#151922",
+    "secondary": "#6095df",
+    "text": "#ffffff",
+    "background": "#06151e"
+  },
+  "assets": {}
+}

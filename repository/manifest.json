@@ -8,6 +8,14 @@
     "category": "General",
     "versions": [
       {
+        "version": "0.2.0.0",
+        "changelog": "Ships the 29 standard themes (19 calendar themes with artwork, 10 colour themes). They are installed on first start; existing and deleted packs are left alone.",
+        "targetAbi": "12.2.0.0",
+        "sourceUrl": "https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/repository/theme-manager_0.2.0.0.zip",
+        "checksum": "5905B78BF952AC89397EAF36B89D93BC",
+        "timestamp": "2026-10-19T13:43:17Z"
+      },
+      {
         "version": "0.1.0.0",
         "changelog": "First public preview: personal themes, seasonal calendar, custom calendars, library banners for every library, File Transformation support.",
         "targetAbi": "12.2.0.0",

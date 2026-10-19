@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "newyear",
+  "name": "New Year",
+  "version": "1.0.0",
+  "author": "Local artwork",
+  "category": "Calendar",
+  "calendar": {
+    "end": "01-02",
+    "priority": 100,
+    "kind": "Range",
+    "start": "12-30"
+  },
+  "palette": {
+    "accent": "#ffd76b",
+    "surface": "#101722",
+    "secondary": "#8de5ff",
+    "text": "#ffffff",
+    "background": "#080b12"
+  },
+  "assets": {
+    "background": "background.webp",
+    "movies": "movies.webp",
+    "collections": "collections.webp",
+    "thumbnail": "background.webp",
+    "splash": "background.webp",
+    "tvShows": "tv-shows.webp"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "cozy-evening",
+  "name": "Cozy Evening",
+  "version": "0.1.0",
+  "author": "Local",
+  "category": "Permanent",
+  "palette": {
+    "accent": "#e2af79",
+    "surface": "#151922",
+    "secondary": "#c78b78",
+    "text": "#ffffff",
+    "background": "#1a1210"
+  },
+  "assets": {}
+}

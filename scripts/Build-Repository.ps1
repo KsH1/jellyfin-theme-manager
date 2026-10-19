@@ -2,7 +2,8 @@
 param(
     # A folder made by Build-Package.ps1, e.g. artifacts\build-20261019-095639
     [Parameter(Mandatory)][string]$Package,
-    [string]$Version = '0.1.0.0',
+    # Defaults to the version in Directory.Build.props.
+    [string]$Version,
     [string]$TargetAbi = '12.2.0.0',
     [string]$Changelog = 'Preview alpha.',
     [string]$BaseUrl = 'https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/repository'
@@ -11,6 +12,7 @@ param(
 # Add the manifest's raw URL in Jellyfin under Dashboard -> Plugins -> Repositories.
 $ErrorActionPreference = 'Stop'
 $projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
+if (!$Version) { $Version = ([xml](Get-Content -LiteralPath (Join-Path $projectRoot 'Directory.Build.props') -Raw)).Project.PropertyGroup.Version + '.0' }
 $repository = Join-Path $projectRoot 'repository'
 $guid = '8fa53208-c9f3-4e99-9858-2963ed658aae'
 $description = 'Seasonal and permanent themes, a personal theme per user, library banners and theme packs for Jellyfin Web.'
@@ -23,8 +25,10 @@ New-Item -ItemType Directory -Path $stage | Out-Null
 try {
     # Only the plugin's own assemblies: never Jellyfin or framework DLLs, docs or local logs.
     foreach ($name in 'Jellyfin.Plugin.ThemeManager.dll', 'ThemeManager.Core.dll') {
-        Copy-Item -LiteralPath (Join-Path $projectRoot "$Package\ThemeManager_0.1.0.0\$name") -Destination $stage
+        Copy-Item -LiteralPath (Join-Path $projectRoot "$Package\ThemeManager_$Version\$name") -Destination $stage
     }
+    # Standard themes; the plugin copies them into the server's pack folder on first start (DefaultPacks).
+    Copy-Item -LiteralPath (Join-Path $projectRoot 'default-packs') -Destination (Join-Path $stage 'default-packs') -Recurse
     [ordered]@{
         category = 'General'; changelog = $Changelog; description = $description; guid = $guid; name = 'Theme Manager'
         overview = $overview; owner = 'KsH1'; targetAbi = $TargetAbi; timestamp = $timestamp; version = $Version

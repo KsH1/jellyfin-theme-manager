@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "month-10",
+  "name": "October",
+  "version": "1.0.0",
+  "author": "Local artwork",
+  "category": "Calendar",
+  "calendar": {
+    "priority": 0,
+    "month": 10,
+    "kind": "Month"
+  },
+  "palette": {
+    "accent": "#d99a54",
+    "surface": "#101722",
+    "secondary": "#a45e92",
+    "text": "#ffffff",
+    "background": "#080b12"
+  },
+  "assets": {
+    "background": "background.webp",
+    "movies": "movies.webp",
+    "collections": "collections.webp",
+    "thumbnail": "background.webp",
+    "splash": "background.webp",
+    "tvShows": "tv-shows.webp"
+  }
+}

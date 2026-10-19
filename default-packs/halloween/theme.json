@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "halloween",
+  "name": "Halloween",
+  "version": "1.0.0",
+  "author": "Local artwork",
+  "category": "Calendar",
+  "calendar": {
+    "end": "10-31",
+    "priority": 80,
+    "kind": "Range",
+    "start": "10-01"
+  },
+  "palette": {
+    "accent": "#ff983f",
+    "surface": "#101722",
+    "secondary": "#a879ff",
+    "text": "#ffffff",
+    "background": "#080b12"
+  },
+  "assets": {
+    "background": "background.webp",
+    "movies": "movies.webp",
+    "collections": "collections.webp",
+    "thumbnail": "background.webp",
+    "splash": "background.webp",
+    "tvShows": "tv-shows.webp"
+  }
+}

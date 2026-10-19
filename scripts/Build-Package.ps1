@@ -2,6 +2,8 @@
 param()
 $ErrorActionPreference = 'Stop'
 $projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
+# The only place the version is set is Directory.Build.props.
+$version = ([xml](Get-Content -LiteralPath (Join-Path $projectRoot 'Directory.Build.props') -Raw)).Project.PropertyGroup.Version + '.0'
 Push-Location $projectRoot
 try {
     dotnet restore ThemeManager.slnx --locked-mode
@@ -11,7 +13,7 @@ try {
     dotnet build src/Jellyfin.Plugin.ThemeManager -c Release --no-restore
     if ($LASTEXITCODE) { throw 'Build failed.' }
     $artifactRoot = Join-Path $projectRoot ('artifacts\build-' + [DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss'))
-    $stage = Join-Path $artifactRoot 'ThemeManager_0.1.0.0'
+    $stage = Join-Path $artifactRoot "ThemeManager_$version"
     New-Item -ItemType Directory -Path $stage | Out-Null
     # Explicit allow-list: never bundle Jellyfin or framework assemblies.
     foreach ($name in @('Jellyfin.Plugin.ThemeManager.dll','ThemeManager.Core.dll')) {
@@ -21,7 +23,7 @@ try {
     Copy-Item -LiteralPath (Join-Path $projectRoot 'LICENSE') -Destination $stage
     Copy-Item -LiteralPath (Join-Path $projectRoot 'docs') -Destination $stage -Recurse
     Copy-Item -LiteralPath (Join-Path $projectRoot 'examples') -Destination $stage -Recurse
-    $zip = Join-Path $artifactRoot 'ThemeManager-0.1.0.0.zip'
+    $zip = Join-Path $artifactRoot "ThemeManager-$version.zip"
     Compress-Archive -Path (Join-Path $stage '*') -DestinationPath $zip
     $sourceStage=Join-Path $artifactRoot 'source'
     New-Item -ItemType Directory -Path $sourceStage | Out-Null
@@ -37,7 +39,7 @@ try {
         New-Item -ItemType Directory -Path ([IO.Path]::GetDirectoryName($target)) -Force | Out-Null
         Copy-Item -LiteralPath $file.FullName -Destination $target
     }
-    $sourceZip=Join-Path $artifactRoot 'ThemeManager-0.1.0.0-source.zip'
+    $sourceZip=Join-Path $artifactRoot "ThemeManager-$version-source.zip"
     Compress-Archive -Path (Join-Path $sourceStage '*') -DestinationPath $sourceZip
     $hashes=Get-FileHash -LiteralPath $zip,$sourceZip -Algorithm SHA256
     $hashes | ForEach-Object { $_.Hash.ToLowerInvariant() + '  ' + [IO.Path]::GetFileName($_.Path) } | Set-Content -LiteralPath (Join-Path $artifactRoot 'SHA256SUMS.txt') -Encoding utf8

@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "christmas",
+  "name": "Christmas",
+  "version": "1.0.0",
+  "author": "Local artwork",
+  "category": "Calendar",
+  "calendar": {
+    "end": "12-26",
+    "priority": 80,
+    "kind": "Range",
+    "start": "11-24"
+  },
+  "palette": {
+    "accent": "#e7c57b",
+    "surface": "#101722",
+    "secondary": "#83ca9d",
+    "text": "#ffffff",
+    "background": "#080b12"
+  },
+  "assets": {
+    "background": "background.webp",
+    "movies": "movies.webp",
+    "collections": "collections.webp",
+    "thumbnail": "background.webp",
+    "splash": "background.webp",
+    "tvShows": "tv-shows.webp"
+  }
+}

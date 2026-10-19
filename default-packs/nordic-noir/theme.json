@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "nordic-noir",
+  "name": "Nordic Noir",
+  "version": "0.1.0",
+  "author": "Local",
+  "category": "Permanent",
+  "palette": {
+    "accent": "#8eafbd",
+    "surface": "#151922",
+    "secondary": "#adb5be",
+    "text": "#ffffff",
+    "background": "#0b1115"
+  },
+  "assets": {}
+}

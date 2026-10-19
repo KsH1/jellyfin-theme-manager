@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "nature-escape",
+  "name": "Nature Escape",
+  "version": "0.1.0",
+  "author": "Local",
+  "category": "Permanent",
+  "palette": {
+    "accent": "#8ed4a2",
+    "surface": "#151922",
+    "secondary": "#c4bb79",
+    "text": "#ffffff",
+    "background": "#091710"
+  },
+  "assets": {}
+}

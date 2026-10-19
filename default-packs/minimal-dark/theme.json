@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "minimal-dark",
+  "name": "Minimal Dark",
+  "version": "0.1.0",
+  "author": "Local",
+  "category": "Permanent",
+  "palette": {
+    "accent": "#bbbbbb",
+    "surface": "#151922",
+    "secondary": "#9099a5",
+    "text": "#ffffff",
+    "background": "#0c0d10"
+  },
+  "assets": {}
+}

@@ -17,8 +17,21 @@ public sealed class ServiceRegistrator : IPluginServiceRegistrator
         services.AddSingleton(provider =>
         {
             var paths = provider.GetRequiredService<IApplicationPaths>();
-            var catalog = new ThemeCatalog(Path.Combine(paths.DataPath, "theme-manager", "packs"));
-            CatalogLog.Report(provider.GetRequiredService<ILogger<ThemeCatalog>>(), catalog.Reload(), "loaded");
+            var logger = provider.GetRequiredService<ILogger<ThemeCatalog>>();
+            var root = Path.Combine(paths.DataPath, "theme-manager");
+            var catalog = new ThemeCatalog(Path.Combine(root, "packs"));
+            try
+            {
+                // The packs in the plugin's own folder give a new install its standard themes.
+                var bundled = Path.Combine(Path.GetDirectoryName(typeof(Plugin).Assembly.Location)!, DefaultPacks.FolderName);
+                var copied = DefaultPacks.Seed(bundled, catalog.Root, Path.Combine(root, "default-packs.json"));
+                if (copied.Count > 0) logger.LogInformation("Theme Manager installed {Count} standard theme packs: {Packs}", copied.Count, string.Join(", ", copied));
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                logger.LogWarning(ex, "Theme Manager could not install its standard theme packs; existing packs keep working");
+            }
+            CatalogLog.Report(logger, catalog.Reload(), "loaded");
             return catalog;
         });
         services.AddSingleton(provider =>

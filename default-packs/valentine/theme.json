@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "valentine",
+  "name": "Valentine",
+  "version": "1.0.0",
+  "author": "Local artwork",
+  "category": "Calendar",
+  "calendar": {
+    "end": "02-14",
+    "priority": 90,
+    "kind": "Range",
+    "start": "02-14"
+  },
+  "palette": {
+    "accent": "#ff79b0",
+    "surface": "#101722",
+    "secondary": "#bb79ff",
+    "text": "#ffffff",
+    "background": "#080b12"
+  },
+  "assets": {
+    "background": "background.webp",
+    "movies": "movies.webp",
+    "collections": "collections.webp",
+    "thumbnail": "background.webp",
+    "splash": "background.webp",
+    "tvShows": "tv-shows.webp"
+  }
+}

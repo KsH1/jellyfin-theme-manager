@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "anime-city",
+  "name": "Anime City",
+  "version": "0.1.0",
+  "author": "Local",
+  "category": "Permanent",
+  "palette": {
+    "accent": "#ff7bb9",
+    "surface": "#151922",
+    "secondary": "#78dcec",
+    "text": "#ffffff",
+    "background": "#150b24"
+  },
+  "assets": {}
+}
