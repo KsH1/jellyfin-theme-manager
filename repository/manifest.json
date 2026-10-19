@@ -9,6 +9,30 @@
     "imageUrl": "https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/logo.png",
     "versions": [
       {
+        "version": "0.2.7.0",
+        "changelog": "Seasonal effects are now off by default; an administrator switches them on under Server default.",
+        "targetAbi": "12.2.0.0",
+        "sourceUrl": "https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/repository/theme-manager_0.2.7.0.zip",
+        "checksum": "BCD5B59004676F897EAD2EF02813A01A",
+        "timestamp": "2026-10-19T17:41:12Z"
+      },
+      {
+        "version": "0.2.7.0",
+        "changelog": "Seasonal effects are now off by default; an administrator switches them on under Server default.",
+        "targetAbi": "12.1.0.0",
+        "sourceUrl": "https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/repository/theme-manager_0.2.7.0-jf12.1.0.zip",
+        "checksum": "59830C86832970001DB95F3B08C1505B",
+        "timestamp": "2026-10-19T17:41:05Z"
+      },
+      {
+        "version": "0.2.7.0",
+        "changelog": "Seasonal effects are now off by default; an administrator switches them on under Server default.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/repository/theme-manager_0.2.7.0-jf12.0.0.zip",
+        "checksum": "DC269B4F2936D88622852AB44721C83B",
+        "timestamp": "2026-10-19T17:40:56Z"
+      },
+      {
         "version": "0.2.6.0",
         "changelog": "Libraries without their own banner get one with their name in TV and mobile apps; seasonal effects (snow, leaves, hearts, confetti) that can be switched off; a status panel that tells you when a newer version waits for a restart.",
         "targetAbi": "12.2.0.0",

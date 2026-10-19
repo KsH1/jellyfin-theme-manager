@@ -11,7 +11,7 @@ const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = n
 document.head.append(css);
 const current = () => readSession(window.ApiClient, pluginBase);
 const effects = createEffects();
-let effectsAllowed = true;
+let effectsAllowed = false;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 function effectsOff() { try { return localStorage.getItem(effectsStorageKey) === 'off'; } catch { return false; } }
 function showEffect() { effects.set(activeTheme && !isHidden() && !isAdminPage(location.hash) && effectsWanted({ allowed: effectsAllowed, userOff: effectsOff(), reducedMotion: reducedMotion.matches }) ? effectFor(activeTheme) : null); }
@@ -77,7 +77,7 @@ async function sync(force = false) {
         if (nextSignature !== signature) {
             clearDecoration(); images?.dispose(); images = pendingImages; pendingImages = null;
         }
-        activeTheme = effective.theme; signature = nextSignature; libraryMap = librarySlots(views); effectsAllowed = effective.effects !== false;
+        activeTheme = effective.theme; signature = nextSignature; libraryMap = librarySlots(views); effectsAllowed = effective.effects === true;
         nextRefresh = Date.now() + 60000; decorate();
     } catch (error) {
         pendingImages?.dispose();

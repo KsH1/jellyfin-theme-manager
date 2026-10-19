@@ -186,6 +186,8 @@ test('effects: a theme field wins, standard themes have built-in effects, unknow
     assert.equal(effectsWanted({ allowed: false, userOff: false, reducedMotion: false }), false);
     assert.equal(effectsWanted({ allowed: true, userOff: true, reducedMotion: false }), false);
     assert.equal(effectsWanted({ allowed: true, userOff: false, reducedMotion: true }), false);
+    // Off unless an administrator switched them on, also when an older server sends nothing.
+    assert.equal(effectsWanted({ allowed: undefined, userOff: false, reducedMotion: false }), false);
 });
 test('effects stay off on dashboard and plugin settings pages', async () => {
     const { isAdminPage } = await import('../../src/Jellyfin.Plugin.ThemeManager/Web/client-core.mjs');

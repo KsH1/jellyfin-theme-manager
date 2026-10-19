@@ -95,7 +95,7 @@ Users reload Jellyfin Web once after the install. The **Themes** button (bottom 
 
 Themes are grouped in tabs: Holidays, Months, Permanent and your own (Custom), each with a small preview of its artwork. Search looks through all tabs.
 
-Some themes have a **seasonal effect**: snow at Christmas and in winter, falling leaves in October and November, hearts on Valentine's Day and confetti at New Year. Users can switch effects off in the theme picker; administrators can switch them off for everyone. Effects never show during playback, on the dashboard, or when the system asks for reduced motion.
+Some themes have a **seasonal effect**: snow at Christmas and in winter, falling leaves in October and November, hearts on Valentine's Day and confetti at New Year. Effects are **off by default**: an administrator switches them on under **Server default**, and each user can still switch them off in the theme picker. Effects never show during playback, on the dashboard, or when the system asks for reduced motion.
 
 ![The theme picker's category tabs](docs/images/use-2-picker-tabs.png)
 

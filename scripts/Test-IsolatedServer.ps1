@@ -91,6 +91,7 @@ try {
     # Holidays left out of Automatic Seasonal. Date-independent: whatever holiday is today is excluded and must give way to its month.
     $settings=Request 'ThemeManager/Admin/Settings' 'GET' $null $admin
     Expect ($settings.PSObject.Properties.Name -contains 'automaticExcluded') 'Admin settings list holidays left out of Automatic Seasonal'
+    Expect ($settings.allowEffects -eq $false -and (Request 'ThemeManager/Effective' 'GET' $null $admin).effects -eq $false) 'Seasonal effects are off by default'
     $null=Request 'ThemeManager/Me' 'PUT' @{mode='Automatic'} $admin
     $null=Request 'ThemeManager/Admin/Settings' 'PUT' @{choice=@{mode='Automatic'};timeZoneId='Europe/Copenhagen';automaticExcluded=@()} $admin
     $today=(Request 'ThemeManager/Effective' 'GET' $null $admin).resolution.themeId

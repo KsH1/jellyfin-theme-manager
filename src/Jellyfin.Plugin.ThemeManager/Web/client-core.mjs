@@ -163,9 +163,9 @@ export function effectFor(theme) {
     return effectKinds.includes(effect) ? effect : null;
 }
 
-/** Effects show only when the server allows them, this user has not switched them off and the system does not ask for less motion. */
+/** Effects show only when an administrator switched them on, this user has not switched them off and the system does not ask for less motion. */
 export function effectsWanted({ allowed, userOff, reducedMotion }) {
-    return allowed !== false && !userOff && !reducedMotion;
+    return allowed === true && !userOff && !reducedMotion;
 }
 
 /** Dashboard and plugin settings pages: the theme shows there, but effects would only get in the way. */
