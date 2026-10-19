@@ -1,5 +1,7 @@
 # Plan: Theme Manager som installerbart plugin til alle Jellyfin-servere
 
+> **Historical (19 October 2026).** This plan is done or replaced; the current state is in [STATUS.md](STATUS.md). Kept for the reasoning behind decisions.
+
 19. oktober 2026. Målet er, at enhver Jellyfin-administrator kan:
 
 1. tilføje et repository-link i Dashboard → Plugins → Repositories,

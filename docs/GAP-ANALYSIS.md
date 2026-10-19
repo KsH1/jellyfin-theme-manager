@@ -1,5 +1,7 @@
 # Gap-analyse: tilpasning, egne temaer og "My Media"
 
+> **Historical (19 October 2026).** This plan is done or replaced; the current state is in [STATUS.md](STATUS.md). Kept for the reasoning behind decisions.
+
 19. oktober 2026. Grundlag: koden i `src/`, produktionsinstallationen (se `PROD-INSTALL.md`) og de kilder, der er nævnt nederst. Punkter markeret *ikke verificeret* er ikke afprøvet her.
 
 ## Kort fortalt
