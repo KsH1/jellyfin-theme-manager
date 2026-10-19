@@ -4,7 +4,11 @@ using System.Text.Json;
 using MediaBrowser.Common.Api;
 using MediaBrowser.Model.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Net.Http.Headers;
 using Microsoft.Extensions.Logging;
 using ThemeManager.Core;
 
@@ -87,6 +91,37 @@ public static class IndexHtmlTransform
             return result;
         }
         catch (Exception) { return html; }
+    }
+}
+
+/// <summary>
+/// Makes browsers fetch Jellyfin Web's index.html in full while the theme is injected. File Transformation passes a
+/// browser's If-None-Match/If-Modified-Since to Jellyfin's static files, which answer 304 for the unchanged file on
+/// disk before anything is injected. A browser that cached the page before File Transformation was installed would
+/// otherwise keep the page without the theme. The page is a few kilobytes, so always sending it costs little.
+/// </summary>
+public sealed class FreshIndexStartupFilter : IStartupFilter
+{
+    public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next) => app =>
+    {
+        app.Use((context, nextMiddleware) =>
+        {
+            if (WebInjection.State == "Registered" && Plugin.Instance?.Configuration.ShowInWebClient == true && IsIndex(context.Request.Path))
+            {
+                context.Request.Headers.Remove(HeaderNames.IfNoneMatch);
+                context.Request.Headers.Remove(HeaderNames.IfModifiedSince);
+            }
+            return nextMiddleware(context);
+        });
+        next(app);
+    };
+
+    // "/web", "/web/" and "/web/index.html", also behind a BaseUrl such as "/jellyfin/web/".
+    internal static bool IsIndex(PathString path)
+    {
+        var value = path.Value ?? "";
+        return value.EndsWith("/web", StringComparison.OrdinalIgnoreCase) || value.EndsWith("/web/", StringComparison.OrdinalIgnoreCase)
+            || value.EndsWith("/web/index.html", StringComparison.OrdinalIgnoreCase);
     }
 }
 

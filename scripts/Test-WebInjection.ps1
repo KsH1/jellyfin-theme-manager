@@ -52,6 +52,12 @@ function Run-Scenario([string]$Name, [bool]$WithFileTransformation, [bool]$Enabl
         Expect ((Count $root) -eq $expected) "$Name`: /web/ has the loader $expected time(s)"
         Expect ((Count $index) -eq $expected) "$Name`: /web/index.html has the loader $expected time(s)"
         Expect ($root -match '</html>') "$Name`: /web/ is still a complete Jellyfin page"
+        if ($expected -eq 1) {
+            # A browser that cached /web/ before File Transformation was installed asks "changed since?".
+            $since = [DateTime]::UtcNow.ToString('R', [Globalization.CultureInfo]::InvariantCulture)
+            $cached = Invoke-WebRequest "$base/web/" -Headers @{ 'If-Modified-Since' = $since; 'If-None-Match' = '"0123456789abcde"' } -SkipHttpErrorCheck
+            Expect ($cached.StatusCode -eq 200 -and (Count ([string]$cached.Content)) -eq 1) "$Name`: a browser with an old cached page still gets the loader"
+        }
         Expect ((Count $entry) -eq 1) "$Name`: /web/theme-manager.html still works as fallback"
         Expect ((Invoke-WebRequest "$base/ThemeManager/Client/bootstrap.js" -SkipHttpErrorCheck).StatusCode -eq 200) "$Name`: loader script is served"
         $state = if ($WithFileTransformation) { 'Theme Manager: registered with File Transformation' } else { 'Theme Manager: File Transformation is not installed' }

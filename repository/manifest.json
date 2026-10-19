@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/logo.png",
     "versions": [
       {
+        "version": "0.2.3.0",
+        "changelog": "Fix: browsers that had Jellyfin Web cached from before File Transformation was installed now get the theme after a normal reload.",
+        "targetAbi": "12.2.0.0",
+        "sourceUrl": "https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/repository/theme-manager_0.2.3.0.zip",
+        "checksum": "69D38E013DD622926F18D0F21F9469B8",
+        "timestamp": "2026-10-19T15:21:22Z"
+      },
+      {
         "version": "0.2.2.0",
         "changelog": "Adds the plugin logo.",
         "targetAbi": "12.2.0.0",
