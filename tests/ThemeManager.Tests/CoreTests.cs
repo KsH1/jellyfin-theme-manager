@@ -51,6 +51,16 @@ public sealed class CoreTests : IDisposable
         Assert.NotNull(ThemeResolver.Resolve(new(ThemeMode.Fixed, "missing"), new(ThemeMode.Original), snapshot, date).Warning);
     }
 
+    [Theory]
+    [InlineData("snow", true)] [InlineData("none", true)] [InlineData("fireworks", false)] [InlineData("Snow", false)]
+    public void OnlyKnownEffectsAreAccepted(string effect, bool valid)
+    {
+        Pack(new() { Id = "fx", Name = "Effects", Effect = effect });
+        var snapshot = Catalog.Reload();
+        Assert.Equal(valid, snapshot.Themes.ContainsKey("fx"));
+        if (valid) Assert.Equal(effect, snapshot.Themes["fx"].Manifest.Effect);
+    }
+
     [Fact]
     public void ExcludedHolidayGivesWayToTheMonth()
     {

@@ -10,7 +10,7 @@ using ThemeManager.Core;
 namespace Jellyfin.Plugin.ThemeManager;
 
 /// <param name="AutomaticExcluded">Theme ids left out of Automatic Seasonal; null keeps the current setting.</param>
-public sealed record ServerSettings(ThemeChoice Choice, string TimeZoneId, bool AllowPersonalSchedules = true, IReadOnlyList<string>? AutomaticExcluded = null);
+public sealed record ServerSettings(ThemeChoice Choice, string TimeZoneId, bool AllowPersonalSchedules = true, IReadOnlyList<string>? AutomaticExcluded = null, bool? AllowEffects = null);
 public sealed record ScheduleTest(ThemeSchedule Schedule, DateOnly? From = null);
 
 [ApiController]
@@ -29,7 +29,7 @@ public sealed class ThemeController(ThemeCatalog catalog, UserThemeStore users, 
     private static object Describe(ResolvedTheme theme) => new
     {
         theme.Manifest.Id, theme.Manifest.Name, theme.Manifest.Version, theme.Manifest.Category,
-        theme.Manifest.Extends, theme.Manifest.Calendar, theme.Palette,
+        theme.Manifest.Extends, theme.Manifest.Calendar, theme.Manifest.Effect, theme.Palette,
         Assets = theme.Assets.ToDictionary(p => p.Key, p => new { p.Value.ContentType, p.Value.Revision }),
     };
 
@@ -82,7 +82,7 @@ public sealed class ThemeController(ThemeCatalog catalog, UserThemeStore users, 
         if (Today() is not { } date) return Problem("The configured time zone is invalid. An administrator must correct it.");
         var snapshot = catalog.Snapshot;
         var result = ThemeResolver.Resolve(choice, Plugin.Instance.ServerChoice, snapshot, date, available, Plugin.Instance.AutomaticExcluded);
-        return Data(new { Resolution = result, LocalDate = date, Theme = result.ThemeId is { } themeId ? Describe(snapshot.Themes[themeId]) : null, Rendering = "OptInWebClient", RefreshAfterSeconds = 60 });
+        return Data(new { Resolution = result, LocalDate = date, Theme = result.ThemeId is { } themeId ? Describe(snapshot.Themes[themeId]) : null, Rendering = "OptInWebClient", Effects = Plugin.Instance.Configuration.AllowEffects, RefreshAfterSeconds = 60 });
     }
 
     [HttpGet("Themes/{id}/Assets/{slot}")]
@@ -183,7 +183,7 @@ public sealed class ThemeController(ThemeCatalog catalog, UserThemeStore users, 
 
     [HttpGet("Admin/Settings")]
     [Authorize(Policy = Policies.RequiresElevation)]
-    public IActionResult GetSettings() => Data(new ServerSettings(Plugin.Instance.ServerChoice, Plugin.Instance.Configuration.TimeZoneId, Plugin.Instance.Configuration.AllowPersonalSchedules, Plugin.Instance.AutomaticExcluded));
+    public IActionResult GetSettings() => Data(new ServerSettings(Plugin.Instance.ServerChoice, Plugin.Instance.Configuration.TimeZoneId, Plugin.Instance.Configuration.AllowPersonalSchedules, Plugin.Instance.AutomaticExcluded, Plugin.Instance.Configuration.AllowEffects));
 
     [HttpPut("Admin/Settings")]
     [Authorize(Policy = Policies.RequiresElevation)]
@@ -206,6 +206,7 @@ public sealed class ThemeController(ThemeCatalog catalog, UserThemeStore users, 
         configuration.ServerScheduleId = settings.Choice.Mode == ThemeMode.Schedule ? settings.Choice.ScheduleId : null;
         configuration.TimeZoneId = settings.TimeZoneId;
         configuration.AllowPersonalSchedules = settings.AllowPersonalSchedules;
+        if (settings.AllowEffects is { } allowEffects) configuration.AllowEffects = allowEffects;
         if (settings.AutomaticExcluded is { } excluded) configuration.AutomaticExcluded = [.. excluded.Distinct(StringComparer.Ordinal)];
         Plugin.Instance.SaveConfiguration();
         return NoContent();

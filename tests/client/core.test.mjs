@@ -173,3 +173,22 @@ test('picker tiles use the small revisioned thumbnail, palette themes have none'
     assert.equal(thumbnailPath({ id: 'ocean-blue', assets: {} }), null);
     assert.equal(thumbnailPath({ id: 'a b', assets: { background: {} } }), 'Themes/a%20b/Assets/background/Preview?size=thumb');
 });
+test('effects: a theme field wins, standard themes have built-in effects, unknown values give none', async () => {
+    const { effectFor, effectsWanted } = await import('../../src/Jellyfin.Plugin.ThemeManager/Web/client-core.mjs');
+    assert.equal(effectFor({ id: 'christmas' }), 'snow');
+    assert.equal(effectFor({ id: 'halloween' }), 'leaves');
+    assert.equal(effectFor({ id: 'christmas', effect: 'none' }), null);
+    assert.equal(effectFor({ id: 'my-theme', effect: 'hearts' }), 'hearts');
+    assert.equal(effectFor({ id: 'my-theme', effect: '<script>' }), null);
+    assert.equal(effectFor({ id: 'ocean-blue' }), null);
+    assert.equal(effectFor(null), null);
+    assert.equal(effectsWanted({ allowed: true, userOff: false, reducedMotion: false }), true);
+    assert.equal(effectsWanted({ allowed: false, userOff: false, reducedMotion: false }), false);
+    assert.equal(effectsWanted({ allowed: true, userOff: true, reducedMotion: false }), false);
+    assert.equal(effectsWanted({ allowed: true, userOff: false, reducedMotion: true }), false);
+});
+test('effects stay off on dashboard and plugin settings pages', async () => {
+    const { isAdminPage } = await import('../../src/Jellyfin.Plugin.ThemeManager/Web/client-core.mjs');
+    for (const hash of ['#/dashboard', '#/dashboard/plugins', '#/configurationpage?name=theme-manager', '#!/dashboard']) assert.equal(isAdminPage(hash), true, hash);
+    for (const hash of ['#/home', '#/movies?topParentId=1', '#/details?id=2', '']) assert.equal(isAdminPage(hash), false, hash);
+});

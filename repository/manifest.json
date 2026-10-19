@@ -9,6 +9,30 @@
     "imageUrl": "https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/logo.png",
     "versions": [
       {
+        "version": "0.2.6.0",
+        "changelog": "Libraries without their own banner get one with their name in TV and mobile apps; seasonal effects (snow, leaves, hearts, confetti) that can be switched off; a status panel that tells you when a newer version waits for a restart.",
+        "targetAbi": "12.2.0.0",
+        "sourceUrl": "https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/repository/theme-manager_0.2.6.0.zip",
+        "checksum": "7CB887099FB325C1869B8E27A4A81D4F",
+        "timestamp": "2026-10-19T17:36:50Z"
+      },
+      {
+        "version": "0.2.6.0",
+        "changelog": "Libraries without their own banner get one with their name in TV and mobile apps; seasonal effects (snow, leaves, hearts, confetti) that can be switched off; a status panel that tells you when a newer version waits for a restart.",
+        "targetAbi": "12.1.0.0",
+        "sourceUrl": "https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/repository/theme-manager_0.2.6.0-jf12.1.0.zip",
+        "checksum": "1D8151E613817DDCD21557C78E942F33",
+        "timestamp": "2026-10-19T17:36:42Z"
+      },
+      {
+        "version": "0.2.6.0",
+        "changelog": "Libraries without their own banner get one with their name in TV and mobile apps; seasonal effects (snow, leaves, hearts, confetti) that can be switched off; a status panel that tells you when a newer version waits for a restart.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/repository/theme-manager_0.2.6.0-jf12.0.0.zip",
+        "checksum": "6971F53A7070FFDD2AC9B7A3F9218443",
+        "timestamp": "2026-10-19T17:36:34Z"
+      },
+      {
         "version": "0.2.5.0",
         "changelog": "Library banners for TV and mobile apps from the server default theme (off by default), with backup and exact restore of the original images.",
         "targetAbi": "12.2.0.0",

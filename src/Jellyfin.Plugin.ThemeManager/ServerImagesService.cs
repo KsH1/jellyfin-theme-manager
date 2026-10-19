@@ -1,4 +1,7 @@
+using System.Security.Cryptography;
+using System.Text;
 using MediaBrowser.Common.Api;
+using MediaBrowser.Controller.Drawing;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
@@ -18,7 +21,7 @@ public sealed record ServerImagesRun(DateTimeOffset At, string? ThemeId, IReadOn
 /// Off by default. Before a library's image is first replaced it is copied to a backup; "Original Jellyfin", switching
 /// the feature off or Restore puts every backup back (or removes the image if the library had none).
 /// </summary>
-public sealed class ServerImagesService(ILibraryManager libraries, IProviderManager providers, ThemeCatalog catalog, ScheduleStore schedules, ServerImageState state, ILogger<ServerImagesService> logger)
+public sealed class ServerImagesService(ILibraryManager libraries, IProviderManager providers, IImageEncoder encoder, ThemeCatalog catalog, ScheduleStore schedules, ServerImageState state, ILogger<ServerImagesService> logger)
 {
     private readonly SemaphoreSlim _gate = new(1, 1);
     public ServerImagesRun? LastRun { get; private set; }
@@ -43,7 +46,9 @@ public sealed class ServerImagesService(ILibraryManager libraries, IProviderMana
             foreach (var folder in folders)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                var asset = theme is not null && slots.TryGetValue(folder.ItemId, out var slot) ? theme.Assets.GetValueOrDefault(slot) : null;
+                var themed = theme is not null && slots.TryGetValue(folder.ItemId, out var slot) ? theme.Assets.GetValueOrDefault(slot) : null;
+                // Libraries without a themed banner (e.g. Music) get a generic one: the theme background with the library name.
+                var asset = themed ?? (theme?.Assets.GetValueOrDefault("background") is { } background ? GenericBanner(folder.ItemId, folder.Name, background) : null);
                 if (asset is null)
                 {
                     // No themed banner for this library today: give back what it had.
@@ -123,6 +128,37 @@ public sealed class ServerImagesService(ILibraryManager libraries, IProviderMana
         state.Save(records);
         if (record.Backup is { } used && File.Exists(used)) File.Delete(used);
         return true;
+    }
+
+    /// <summary>
+    /// Jellyfin's own library-image builder (the one that makes its default library tiles) draws the name on the
+    /// background. Made once per library, background revision and name; null when the encoder cannot make collages.
+    /// </summary>
+    private ResolvedAsset? GenericBanner(string libraryId, string name, ResolvedAsset background)
+    {
+        if (!encoder.SupportsImageCollageCreation) return null;
+        var revision = "generic-" + background.Revision + "-" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(name)))[..12].ToLowerInvariant();
+        var folder = Path.Combine(state.Root, "generated");
+        var prefix = Guid.Parse(libraryId).ToString("N") + "-";
+        // Short name: Skia writes through native file APIs that fail silently on paths over 260 characters.
+        var path = Path.Combine(folder, prefix + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(revision)))[..16].ToLowerInvariant() + ".png");
+        try
+        {
+            if (!File.Exists(path))
+            {
+                Directory.CreateDirectory(folder);
+                encoder.CreateImageCollage(new ImageCollageOptions { InputPaths = [background.Path], OutputPath = path, Width = 960, Height = 540 }, name);
+                if (!File.Exists(path)) return null;
+                // Only the newest generic banner per library is kept.
+                foreach (var old in Directory.EnumerateFiles(folder, prefix + "*.png").Where(f => f != path)) File.Delete(old);
+            }
+            return new ResolvedAsset(path, "image/png", revision);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogWarning(ex, "Theme Manager could not make a generic banner for library {Library}; its image is left as it was", name);
+            return null;
+        }
     }
 
     private static string MimeFor(string path) => Path.GetExtension(path).ToLowerInvariant() switch

@@ -20,6 +20,8 @@ public sealed class PluginConfiguration : BasePluginConfiguration
     public bool ShowInWebClient { get; set; } = true;
     /// <summary>Set library images from the server default theme, for TV and mobile apps. Off until an administrator switches it on.</summary>
     public bool ServerWideImages { get; set; }
+    /// <summary>Seasonal effects (snow, leaves, hearts, confetti) in Jellyfin Web. Each user can still switch them off.</summary>
+    public bool AllowEffects { get; set; } = true;
 }
 
 public sealed class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages

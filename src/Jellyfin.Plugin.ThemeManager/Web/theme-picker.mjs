@@ -1,7 +1,7 @@
-import { Generation, ImageSet, groupThemes, groups, paletteVariables, request, sameSession, slots, themeGroup, thumbnailPath } from './client-core.mjs';
+import { Generation, ImageSet, effectsStorageKey, groupThemes, groups, paletteVariables, request, sameSession, slots, themeGroup, thumbnailPath } from './client-core.mjs';
 import { createScheduleEditor, scheduleEditorCss } from './schedule-editor.mjs';
 
-export function createPicker(getSession, onSaved) {
+export function createPicker(getSession, onSaved, onEffects = () => {}) {
     const host = document.createElement('div');
     host.id = 'theme-manager-picker';
     const root = host.attachShadow({ mode: 'open' });
@@ -37,6 +37,7 @@ export function createPicker(getSession, onSaved) {
       <div class="body">
         <div class="controls"><label>Theme mode<select class="mode"><option value="FollowServer">Follow server default</option><option value="Automatic">Automatic Seasonal</option><option value="Fixed">Choose a theme</option><option value="Original">Original Jellyfin</option></select></label><label>Find a theme<input class="search" type="search" placeholder="Search themes…" /></label></div>
         <section class="preview" aria-label="Theme preview"><h2 class="preview-title">Loading your theme…</h2><p class="preview-detail"></p><div class="swatches"></div><div class="banners"></div></section>
+        <label class="fx" style="display:flex;flex-direction:row;align-items:center;gap:.5em;font-size:13px;margin:0 0 .6em"><input class="effects" type="checkbox" style="width:auto" /> Seasonal effects (snow, leaves, hearts) on this device</label>
         <p class="hint">Previewing does not save your choice. Automatic themes use the server’s calendar. Original removes this plugin’s styling; existing server-wide custom styling is unchanged.</p>
         <div class="section-title"><h2>Available themes</h2><span class="count"></span></div><div class="tabs" role="tablist" aria-label="Theme categories"></div><div class="grid" role="tabpanel" aria-label="Available themes"></div>
         <details class="mycal" hidden><summary>My own calendar</summary><p class="hint">Make your own "Automatic Seasonal": pick which theme shows on which dates. Only you see it.</p><div class="editor"></div>
@@ -185,6 +186,12 @@ export function createPicker(getSession, onSaved) {
     dialog.addEventListener('cancel', event => { event.preventDefault(); close(); });
     el('.mode').addEventListener('change', () => { gallery(); void preview(); });
     el('.search').addEventListener('input', gallery);
+    // Stored in this browser only; Theme Manager also skips effects when the system asks for less motion.
+    try { el('.effects').checked = localStorage.getItem(effectsStorageKey) !== 'off'; } catch { el('.effects').checked = true; }
+    el('.effects').addEventListener('change', () => {
+        try { localStorage.setItem(effectsStorageKey, el('.effects').checked ? 'on' : 'off'); } catch { /* private mode: effects follow the default */ }
+        onEffects();
+    });
     el('.save-cal').addEventListener('click', async () => {
         if (!valid() || !calendarEditor) return;
         el('.save-cal').disabled = true; status('Saving your calendar…');

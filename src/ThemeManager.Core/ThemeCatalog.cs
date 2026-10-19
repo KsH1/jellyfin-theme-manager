@@ -13,6 +13,7 @@ public sealed partial class ThemeCatalog(string root)
     public CatalogSnapshot Snapshot => Volatile.Read(ref _snapshot);
     private static readonly HashSet<string> AssetKeys = ["background", "splash", "thumbnail", "collections", "movies", "tvShows"];
     private static readonly HashSet<string> ColorKeys = ["accent", "secondary", "surface", "text", "background"];
+    public static readonly IReadOnlySet<string> Effects = new HashSet<string>(StringComparer.Ordinal) { "none", "snow", "leaves", "hearts", "confetti" };
 
     [GeneratedRegex("^#[0-9a-fA-F]{6}$", RegexOptions.CultureInvariant)]
     private static partial Regex HexColor();
@@ -130,5 +131,6 @@ public sealed partial class ThemeCatalog(string root)
         if (manifest.Palette.Any(p => !ColorKeys.Contains(p.Key) || p.Value is null || !HexColor().IsMatch(p.Value))) throw new InvalidDataException("Palette accepts known keys and #RRGGBB colors only.");
         if (manifest.Assets.Keys.Any(k => !AssetKeys.Contains(k))) throw new InvalidDataException("Unknown asset. Executable code and arbitrary CSS are not accepted in schema 1.");
         if (manifest.Calendar is { } rule) SeasonalCalendar.Validate(rule);
+        if (manifest.Effect is { } effect && !Effects.Contains(effect)) throw new InvalidDataException("Effect must be one of: " + string.Join(", ", Effects) + ".");
     }
 }

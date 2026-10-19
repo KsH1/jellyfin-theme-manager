@@ -24,5 +24,6 @@
     "thumbnail": "background.webp",
     "splash": "background.webp",
     "tvShows": "tv-shows.webp"
-  }
+  },
+  "effect": "snow"
 }

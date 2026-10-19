@@ -83,6 +83,7 @@ This is the included example, [`examples/sample-aurora/theme.json`](../examples/
 | `assets` | Optional. Slots `background`, `movies`, `tvShows`, `collections`. Every file you name must exist in the ZIP. `splash` and `thumbnail` are accepted but not shown anywhere yet. |
 | `extends` | Optional. The id of an installed theme to inherit images and colours from; your own fields win. |
 | `calendar` | Optional. Makes the theme part of the built-in "Automatic Seasonal". Most people should use a calendar (Part 2) instead. |
+| `effect` | Optional. A seasonal effect in Jellyfin Web: `snow`, `leaves`, `hearts`, `confetti` or `none`. Users can switch effects off in the theme picker, and they never show when the system asks for reduced motion. |
 
 Unknown fields are rejected, so a typo gives a clear error instead of being ignored. Scripts, CSS, HTML, SVG and web links are not allowed in a theme.
 

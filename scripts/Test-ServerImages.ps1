@@ -62,15 +62,17 @@ try {
     Expect ($run.themeId -eq 'halloween' -and -not $run.error) 'switching on applies the server default theme'
     Expect ((PrimarySize 'Film') -eq $moviesSize) 'Film gets the theme Movies banner'
     Expect ((PrimarySize 'TV Shows') -eq $tvSize) 'TV Shows gets the theme TV Shows banner'
-    Expect ((PrimarySize 'Musik') -eq 0) 'a library without a banner type is left alone'
+    Expect ((PrimarySize 'Musik') -gt 0) 'Musik (no banner type) gets a generic banner with its name'
+    $generated = @(Get-ChildItem (Join-Path $runRoot 'data/theme-manager/server-images/generated') -Filter '*.png')
+    Expect ($generated.Count -eq 1) 'one generic banner was made'
     $again = Api 'ThemeManager/Admin/ServerImages/Apply' 'POST'
     Expect (@($again.changed).Count -eq 0) 'an unchanged theme writes nothing'
 
     Api 'ThemeManager/Admin/Settings' 'PUT' @{ choice = @{ mode = 'Original' }; timeZoneId = 'Europe/Copenhagen' } | Out-Null
     $restored = Api 'ThemeManager/Admin/ServerImages/Apply' 'POST'
-    Expect (@($restored.restored).Count -eq 2) 'Original Jellyfin as server default restores both libraries'
+    Expect (@($restored.restored).Count -eq 3) 'Original Jellyfin as server default restores all three libraries'
     Expect ((PrimarySize 'Film') -eq $originalSize) 'Film gets its own image back'
-    Expect ((PrimarySize 'TV Shows') -eq 0) 'TV Shows has no image again'
+    Expect ((PrimarySize 'TV Shows') -eq 0 -and (PrimarySize 'Musik') -eq 0) 'TV Shows and Musik have no image again'
 
     Api 'ThemeManager/Admin/Settings' 'PUT' @{ choice = @{ mode = 'Fixed'; themeId = 'christmas' }; timeZoneId = 'Europe/Copenhagen' } | Out-Null
     Api 'ThemeManager/Admin/ServerImages/Apply' 'POST' | Out-Null

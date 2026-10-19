@@ -14,7 +14,7 @@ public sealed class WebClientController(IApplicationPaths paths, ILogger<WebClie
     private static readonly IReadOnlyDictionary<string, string> Files = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["bootstrap.js"] = "text/javascript", ["client.mjs"] = "text/javascript", ["client-core.mjs"] = "text/javascript",
-        ["theme-picker.mjs"] = "text/javascript", ["schedule-editor.mjs"] = "text/javascript", ["client.css"] = "text/css",
+        ["theme-picker.mjs"] = "text/javascript", ["effects.mjs"] = "text/javascript", ["schedule-editor.mjs"] = "text/javascript", ["client.css"] = "text/css",
     };
 
     [HttpGet("web/theme-manager.html")]

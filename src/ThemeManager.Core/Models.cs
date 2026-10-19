@@ -49,6 +49,8 @@ public sealed record ThemeManifest
     public CalendarRule? Calendar { get; init; }
     public Dictionary<string, string> Palette { get; init; } = new(StringComparer.Ordinal);
     public Dictionary<string, string> Assets { get; init; } = new(StringComparer.Ordinal);
+    /// <summary>Optional seasonal effect in Jellyfin Web: snow, leaves, hearts, confetti or none.</summary>
+    public string? Effect { get; init; }
 }
 
 public sealed record ResolvedAsset(string Path, string ContentType, string Revision);

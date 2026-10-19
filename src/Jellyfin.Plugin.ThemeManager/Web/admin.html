@@ -5,6 +5,8 @@
     <h1>Theme Manager <small>preview</small></h1>
     <p>Seasonal artwork, permanent palettes and personal themes for Jellyfin Web. Each user chooses their own theme; server branding, Custom CSS and library images are not changed.</p>
     <p class="tm-status" role="status" aria-live="polite"></p>
+    <p class="tm-pending" hidden style="padding:.8em 1em;border-left:4px solid #ffb74d;background:#ffb74d22;font-weight:600"></p>
+    <details class="tm-health" style="margin:.5em 0 1em"><summary style="cursor:pointer">Status</summary><dl class="tm-health-list" style="display:grid;grid-template-columns:max-content 1fr;gap:.3em 1.2em;margin:.8em 0"></dl></details>
     <h2>Where users see themes</h2>
     <p class="tm-web-state" style="padding:1em;border-radius:10px;background:#ffffff10"></p>
     <label style="display:flex;gap:.5em;align-items:center;margin:.8em 0"><input class="tm-web-enabled" type="checkbox" /> Show themes in the normal Jellyfin Web address (needs the File Transformation plugin)</label>
@@ -36,6 +38,7 @@
     <label>Calendar <select class="tm-server-schedule" is="emby-select"></select></label>
     <label style="display:flex;gap:.5em;align-items:center;margin:.8em 0"><input class="tm-allow-personal" type="checkbox" /> Users may make their own personal calendar</label>
     <label>Calendar time zone <input class="tm-zone" is="emby-input" /></label>
+    <label style="display:flex;gap:.5em;align-items:center;margin:.8em 0"><input class="tm-effects" type="checkbox" /> Seasonal effects in Jellyfin Web (snow, leaves, hearts, confetti); users can switch them off</label>
     <fieldset class="tm-holidays" style="border:1px solid #ffffff30;border-radius:8px;margin:1em 0;padding:.6em 1em"><legend>Holidays in Automatic Seasonal</legend><p style="margin:.2em 0 .6em;font-size:.9em;opacity:.8">Unticked holidays are skipped; the month's theme shows instead. Users can still choose them as a fixed theme.</p><div class="tm-holiday-list" style="display:flex;flex-wrap:wrap;gap:.4em 1.4em"></div></fieldset>
     <button class="tm-save-server raised button-submit" is="emby-button" type="button">Save server default</button>
     <h2>Calendars</h2>
@@ -150,6 +153,7 @@
       el('.tm-user-mode').value = mine.mode; el('.tm-user-theme').value = mine.themeId || themes[0]?.id || '';
       el('.tm-server-mode').value = settings.choice.mode; el('.tm-server-theme').value = settings.choice.themeId || themes[0]?.id || '';
       el('.tm-zone').value = settings.timeZoneId;
+      el('.tm-effects').checked = settings.allowEffects !== false;
       // Holidays: calendar themes with a date rule other than a whole month.
       const excluded = new Set(settings.automaticExcluded || []);
       el('.tm-holiday-list').replaceChildren(...themes.filter(t => t.category === 'Calendar' && t.calendar && t.calendar.kind !== 'Month').map(t => {
@@ -190,6 +194,24 @@
       el('.tm-apps-apply').disabled = !info.enabled;
       el('.tm-apps-state').textContent = info.enabled ? 'On. ' + describeRun(result || info.lastRun) : 'Off. Library images are not changed by Theme Manager.' + (result?.restored?.length ? ' Restored: ' + result.restored.join(', ') + '.' : '');
     }
+    async function health() {
+      const s = await api('Admin/Status');
+      const pending = el('.tm-pending');
+      pending.hidden = !s.pending;
+      pending.textContent = s.pending ? 'Version ' + s.pending + ' is installed but not running yet (running: ' + s.loaded + '). Stop and start Jellyfin completely to use it; Dashboard → Restart keeps the old version.' : '';
+      const web = { Registered: s.webEnabled ? 'Normal Jellyfin address (File Transformation)' : 'Switched off: /web/theme-manager.html only', FileTransformationMissing: '/web/theme-manager.html only (File Transformation not installed)', Failed: 'Problem with File Transformation; /web/theme-manager.html only', NotChecked: 'Checking…' }[s.web] || s.web;
+      const rows = [
+        ['Theme Manager', s.loaded + (s.pending ? ' (' + s.pending + ' waiting for restart)' : '')],
+        ['Jellyfin', s.jellyfin],
+        ['Themes', s.themes + ' valid' + (s.problems.length ? ', ' + s.problems.length + ' rejected: ' + s.problems.map(p => p.pack + ' (' + p.message + ')').join('; ') : '')],
+        ['Themes in Jellyfin Web', web],
+        ['TV and mobile apps', s.apps ? 'On' + (s.appsLastRun?.error ? ' (last run failed: ' + s.appsLastRun.error + ')' : '') : 'Off'],
+        ['Calendar', (s.today || 'invalid time zone') + ' · ' + s.timeZoneId],
+      ];
+      el('.tm-health-list').replaceChildren(...rows.flatMap(([k, v]) => { const dt = document.createElement('dt'); dt.textContent = k; dt.style.opacity = '.75'; const dd = document.createElement('dd'); dd.textContent = v; dd.style.margin = '0'; return [dt, dd]; }));
+      // Open the panel when something needs attention.
+      if (s.pending || s.problems.length || s.appsLastRun?.error) el('.tm-health').open = true;
+    }
     function run(fn) { return async function () { try { await fn(); } catch (error) { status(error.message); } }; }
     el('.tm-apps-enabled').addEventListener('change', run(async () => {
       const on = el('.tm-apps-enabled').checked;
@@ -216,7 +238,7 @@
     }));
     el('.tm-save-server').addEventListener('click', run(async () => {
       const mode = el('.tm-server-mode').value;
-      await api('Admin/Settings', 'PUT', { choice: { mode, themeId: mode === 'Fixed' ? el('.tm-server-theme').value : null, scheduleId: mode === 'Schedule' ? el('.tm-server-schedule').value : null }, timeZoneId: el('.tm-zone').value, automaticExcluded: [...el('.tm-holiday-list').querySelectorAll('input:not(:checked)')].map(b => b.value), allowPersonalSchedules: el('.tm-allow-personal').checked });
+      await api('Admin/Settings', 'PUT', { choice: { mode, themeId: mode === 'Fixed' ? el('.tm-server-theme').value : null, scheduleId: mode === 'Schedule' ? el('.tm-server-schedule').value : null }, timeZoneId: el('.tm-zone').value, allowEffects: el('.tm-effects').checked, automaticExcluded: [...el('.tm-holiday-list').querySelectorAll('input:not(:checked)')].map(b => b.value), allowPersonalSchedules: el('.tm-allow-personal').checked });
       await load(); status('Server default saved. Existing branding is unchanged.');
     }));
     el('.tm-schedules').addEventListener('change', run(() => openEditor(el('.tm-schedules').value)));
@@ -245,6 +267,7 @@
     page.addEventListener('viewshow', run(load));
     page.addEventListener('viewshow', run(webClient));
     page.addEventListener('viewshow', run(() => serverImages()));
+    page.addEventListener('viewshow', run(health));
     page.addEventListener('viewhide', release);
   }());
   </script>

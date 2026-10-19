@@ -146,3 +146,29 @@ export function thumbnailPath(theme) {
     if (!background) return null;
     return 'Themes/' + encodeURIComponent(theme.id) + '/Assets/background/Preview?size=thumb' + (background.revision ? '&v=' + encodeURIComponent(background.revision) : '');
 }
+
+// Effects for the standard themes, so servers whose packs predate the "effect" field still get them.
+const standardEffects = {
+    christmas: 'snow', 'month-12': 'snow', 'month-01': 'snow', 'month-02': 'snow',
+    halloween: 'leaves', 'month-10': 'leaves', 'month-11': 'leaves',
+    valentine: 'hearts', newyear: 'confetti',
+};
+export const effectKinds = ['snow', 'leaves', 'hearts', 'confetti'];
+export const effectsStorageKey = 'themeManager.effects';
+
+/** The effect to show for a theme: its own "effect" field wins, then the standard one; null for none. */
+export function effectFor(theme) {
+    if (!theme) return null;
+    const effect = theme.effect ?? standardEffects[theme.id] ?? null;
+    return effectKinds.includes(effect) ? effect : null;
+}
+
+/** Effects show only when the server allows them, this user has not switched them off and the system does not ask for less motion. */
+export function effectsWanted({ allowed, userOff, reducedMotion }) {
+    return allowed !== false && !userOff && !reducedMotion;
+}
+
+/** Dashboard and plugin settings pages: the theme shows there, but effects would only get in the way. */
+export function isAdminPage(hash) {
+    return /^#!?\/(?:dashboard|configurationpage)(?:[/?]|$)/i.test(hash);
+}

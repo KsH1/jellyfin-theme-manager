@@ -1,4 +1,5 @@
-import { Generation, ImageSet, isDocumentPageHide, isPublicOrPlayback, librarySlots, normalizeId, paletteVariables, readSession, request, sameSession, themeSignature } from './client-core.mjs';
+import { Generation, ImageSet, effectFor, effectsStorageKey, effectsWanted, isAdminPage, isDocumentPageHide, isPublicOrPlayback, librarySlots, normalizeId, paletteVariables, readSession, request, sameSession, themeSignature } from './client-core.mjs';
+import { createEffects } from './effects.mjs';
 import { createPicker } from './theme-picker.mjs';
 
 const pluginBase = new URL('../', import.meta.url);
@@ -9,7 +10,12 @@ const decorated = new Set();
 const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = new URL('./client.css', import.meta.url); css.dataset.themeManager = 'client';
 document.head.append(css);
 const current = () => readSession(window.ApiClient, pluginBase);
-const picker = createPicker(current, async () => { nextRefresh = 0; await sync(true); });
+const effects = createEffects();
+let effectsAllowed = true;
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+function effectsOff() { try { return localStorage.getItem(effectsStorageKey) === 'off'; } catch { return false; } }
+function showEffect() { effects.set(activeTheme && !isHidden() && !isAdminPage(location.hash) && effectsWanted({ allowed: effectsAllowed, userOff: effectsOff(), reducedMotion: reducedMotion.matches }) ? effectFor(activeTheme) : null); }
+const picker = createPicker(current, async () => { nextRefresh = 0; await sync(true); }, showEffect);
 picker.available(false);
 
 function clearDecoration() {
@@ -17,6 +23,7 @@ function clearDecoration() {
     for (const name of ['accent', 'secondary', 'surface', 'text', 'background', 'accent-contrast', 'background-image']) document.documentElement.style.removeProperty('--tm-' + name);
     for (const image of decorated) { delete image.dataset.tmCard; delete image.dataset.tmLabel; image.style.removeProperty('--tm-card-art'); image.style.removeProperty('--tm-card-x'); }
     decorated.clear();
+    effects.set(null);
 }
 function reset() {
     guard.cancel(); clearDecoration(); images?.dispose(); images = null; activeTheme = null; signature = ''; libraryMap = new Map();
@@ -44,6 +51,7 @@ function decorate() {
         decorated.add(container);
     }
     for (const node of decorated) if (!node.isConnected) decorated.delete(node);
+    showEffect();
 }
 function scheduleDecoration() { if (!frame) frame = requestAnimationFrame(() => { frame = 0; decorate(); }); }
 
@@ -69,7 +77,7 @@ async function sync(force = false) {
         if (nextSignature !== signature) {
             clearDecoration(); images?.dispose(); images = pendingImages; pendingImages = null;
         }
-        activeTheme = effective.theme; signature = nextSignature; libraryMap = librarySlots(views);
+        activeTheme = effective.theme; signature = nextSignature; libraryMap = librarySlots(views); effectsAllowed = effective.effects !== false;
         nextRefresh = Date.now() + 60000; decorate();
     } catch (error) {
         pendingImages?.dispose();
@@ -96,7 +104,7 @@ window.addEventListener('pagehide', event => {
     if (!isDocumentPageHide(event, window)) return;
     reset(); session = null;
     if (!event.persisted) {
-        stopped = true; clearInterval(timer); observer.disconnect(); cancelAnimationFrame(frame); picker.destroy(); css.remove();
+        stopped = true; effects.destroy(); clearInterval(timer); observer.disconnect(); cancelAnimationFrame(frame); picker.destroy(); css.remove();
         document.removeEventListener('viewshow', onView); document.removeEventListener('visibilitychange', onVisibility);
         document.removeEventListener('fullscreenchange', onView); window.removeEventListener('hashchange', onView);
     }
