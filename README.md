@@ -66,4 +66,5 @@ All API routes start with `/ThemeManager` and require a Jellyfin login; `Admin/*
 
 ## Licence
 
-Code: GPL-3.0-or-later, see `LICENSE`. A separate licence for the bundled theme artwork in `default-packs` has not been stated yet.
+- Code: GPL-3.0-or-later, see [`LICENSE`](LICENSE).
+- Artwork in `default-packs/` and `examples/`: AI-generated, released under CC0 1.0 (no rights reserved), see [`ARTWORK-LICENSE.md`](ARTWORK-LICENSE.md).
