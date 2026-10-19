@@ -2,7 +2,7 @@
 <html><head><title>Theme Manager</title></head><body>
 <div id="themeManagerPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select">
   <div data-role="content"><div class="content-primary" style="max-width:1100px;margin:auto">
-    <h1>Theme Manager <small>0.1 · Preview alpha</small></h1>
+    <h1>Theme Manager <small>preview</small></h1>
     <p>Seasonal artwork, permanent palettes and personal themes for Jellyfin Web. Each user chooses their own theme; server branding, Custom CSS and library images are not changed.</p>
     <p class="tm-status" role="status" aria-live="polite"></p>
     <h2>Where users see themes</h2>
@@ -171,7 +171,7 @@
     el('.tm-save-user').addEventListener('click', run(async () => {
       const mode = el('.tm-user-mode').value;
       await api('Me', 'PUT', { mode, themeId: mode === 'Fixed' ? el('.tm-user-theme').value : null, scheduleId: mode === 'Schedule' ? el('.tm-user-schedule').value : null });
-      await load(); status('Your preference is saved. Preview-only alpha: the home screen is unchanged.');
+      await load(); status('Your preference is saved. Reload Jellyfin Web to see it.');
     }));
     el('.tm-save-server').addEventListener('click', run(async () => {
       const mode = el('.tm-server-mode').value;

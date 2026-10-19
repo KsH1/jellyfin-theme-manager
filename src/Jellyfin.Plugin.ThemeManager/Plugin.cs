@@ -22,7 +22,7 @@ public sealed class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     public static Plugin Instance { get; private set; } = null!;
     public Plugin(IApplicationPaths paths, IXmlSerializer serializer) : base(paths, serializer) => Instance = this;
     public override string Name => "Theme Manager";
-    public override string Description => "Theme packs, seasonal calendar and personal theme preferences. Preview alpha; does not modify global branding.";
+    public override string Description => "Seasonal and permanent themes, a personal theme per user and library banners for Jellyfin Web. Server branding is not changed.";
     public override Guid Id => new("8fa53208-c9f3-4e99-9858-2963ed658aae");
     public IEnumerable<PluginPageInfo> GetPages() =>
     [

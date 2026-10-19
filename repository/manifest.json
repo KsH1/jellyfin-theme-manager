@@ -8,6 +8,14 @@
     "category": "General",
     "versions": [
       {
+        "version": "0.2.1.0",
+        "changelog": "Updated texts: the admin page and plugin description no longer call the plugin an alpha that leaves the home screen unchanged.",
+        "targetAbi": "12.2.0.0",
+        "sourceUrl": "https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/repository/theme-manager_0.2.1.0.zip",
+        "checksum": "513B5327A37B210652E5CBB55FE72A47",
+        "timestamp": "2026-10-19T14:27:44Z"
+      },
+      {
         "version": "0.2.0.0",
         "changelog": "Ships the 29 standard themes (19 calendar themes with artwork, 10 colour themes). They are installed on first start; existing and deleted packs are left alone.",
         "targetAbi": "12.2.0.0",
