@@ -97,6 +97,14 @@ Themes are grouped in tabs: Holidays, Months, Permanent and your own (Custom), e
 
 ![The theme picker's category tabs](docs/images/use-2-picker-tabs.png)
 
+### TV and mobile apps
+
+Apps with their own interface (Android TV, Swiftfin, Roku and others) cannot show a personal theme. On Theme Manager's settings page, tick **Set library images for TV and mobile apps**: each library then gets the banner of the **server default** theme, changing with the calendar at 00:05 every night. Libraries without a matching banner (for example Music) are left alone.
+
+The original library images are backed up before they are first replaced. Switching the setting off, choosing *Original Jellyfin* as server default, or **Restore original images** puts them back exactly. Switch off other tools that change library images first, or they will overwrite each other.
+
+![The TV and mobile apps section on the settings page](docs/images/use-3-apps.png)
+
 **Your own themes and calendars:** see [docs/CUSTOM-THEMES.md](docs/CUSTOM-THEMES.md). A ready-to-import example is in [`examples/sample-aurora.zip`](examples/sample-aurora.zip).
 
 The 29 standard themes (`default-packs/`) are 19 calendar themes with artwork (months and holidays) and 10 colour themes. A theme that already exists is never overwritten, and a standard theme an administrator deletes is not brought back.
@@ -111,7 +119,7 @@ The 29 standard themes (`default-packs/`) are 19 calendar themes with artwork (m
 | Status *NotSupported* | The installed build does not match your Jellyfin version. Uninstall it and install again from **Available**. |
 | A new version is not offered yet | GitHub keeps a copy of the repository for up to five minutes. Wait a few minutes and reload the plugin page. |
 | An update does not take effect | Stop and start Jellyfin completely (step 4), not Dashboard → Restart. |
-| TV or phone app without the theme | Expected: apps with their own interface do not show personal themes. Use Jellyfin Web in a browser. |
+| TV or phone app without the theme | Apps with their own interface do not show personal themes. Tick **Set library images for TV and mobile apps** to give them the server default's library banners. |
 
 To rebuild the standard packs from full-size PNGs: `python scripts/convert_packs_to_webp.py` (needs Pillow).
 
@@ -126,6 +134,7 @@ To rebuild the standard packs from full-size PNGs: `python scripts/convert_packs
 - Theme picker with category tabs, thumbnails, search and live preview; previews and thumbnails are small copies made by the server.
 - Neutral defaults for any country: the server's own time zone, and Danish-only holidays (Fastelavn, Midsummer) off outside Denmark.
 - Theme packs as data only (`theme.json` + images): no scripts or CSS are accepted from uploads.
+- Library banners for TV and mobile apps from the server default theme, with backup and exact restore of the original images (off by default).
 - Fail-safe: a broken pack or plugin error never stops Jellyfin; the reason goes to the server log.
 
 ## Build and test

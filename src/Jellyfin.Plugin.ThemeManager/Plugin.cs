@@ -18,6 +18,8 @@ public sealed class PluginConfiguration : BasePluginConfiguration
     public bool AllowPersonalSchedules { get; set; } = true;
     /// <summary>Show the theme in the normal Jellyfin Web address when File Transformation is installed.</summary>
     public bool ShowInWebClient { get; set; } = true;
+    /// <summary>Set library images from the server default theme, for TV and mobile apps. Off until an administrator switches it on.</summary>
+    public bool ServerWideImages { get; set; }
 }
 
 public sealed class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages

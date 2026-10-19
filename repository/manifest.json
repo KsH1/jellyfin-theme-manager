@@ -9,6 +9,30 @@
     "imageUrl": "https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/logo.png",
     "versions": [
       {
+        "version": "0.2.5.0",
+        "changelog": "Library banners for TV and mobile apps from the server default theme (off by default), with backup and exact restore of the original images.",
+        "targetAbi": "12.2.0.0",
+        "sourceUrl": "https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/repository/theme-manager_0.2.5.0.zip",
+        "checksum": "1BB7A545FB6C52A7A947E6C02CCE9BBD",
+        "timestamp": "2026-10-19T17:12:59Z"
+      },
+      {
+        "version": "0.2.5.0",
+        "changelog": "Library banners for TV and mobile apps from the server default theme (off by default), with backup and exact restore of the original images.",
+        "targetAbi": "12.1.0.0",
+        "sourceUrl": "https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/repository/theme-manager_0.2.5.0-jf12.1.0.zip",
+        "checksum": "69BB853F7E419C393C8ED1DBBB9424C6",
+        "timestamp": "2026-10-19T17:12:50Z"
+      },
+      {
+        "version": "0.2.5.0",
+        "changelog": "Library banners for TV and mobile apps from the server default theme (off by default), with backup and exact restore of the original images.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/repository/theme-manager_0.2.5.0-jf12.0.0.zip",
+        "checksum": "CBA4F7E0EE0A337351FE83A608A3872F",
+        "timestamp": "2026-10-19T17:12:38Z"
+      },
+      {
         "version": "0.2.4.0",
         "changelog": "Thumbnails in the theme picker; holidays can be left out of Automatic Seasonal (Danish-only holidays off outside Denmark); new installs use the server's own time zone.",
         "targetAbi": "12.2.0.0",

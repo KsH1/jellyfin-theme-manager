@@ -1,0 +1,180 @@
+using MediaBrowser.Common.Api;
+using MediaBrowser.Controller.Library;
+using MediaBrowser.Controller.Providers;
+using MediaBrowser.Model.Entities;
+using MediaBrowser.Model.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using ThemeManager.Core;
+
+namespace Jellyfin.Plugin.ThemeManager;
+
+/// <summary>Result of one run, shown on the admin page.</summary>
+public sealed record ServerImagesRun(DateTimeOffset At, string? ThemeId, IReadOnlyList<string> Changed, IReadOnlyList<string> Restored, string? Error);
+
+/// <summary>
+/// Sets library Primary images from the server default theme, for TV and mobile apps that do not run Jellyfin Web.
+/// Off by default. Before a library's image is first replaced it is copied to a backup; "Original Jellyfin", switching
+/// the feature off or Restore puts every backup back (or removes the image if the library had none).
+/// </summary>
+public sealed class ServerImagesService(ILibraryManager libraries, IProviderManager providers, ThemeCatalog catalog, ScheduleStore schedules, ServerImageState state, ILogger<ServerImagesService> logger)
+{
+    private readonly SemaphoreSlim _gate = new(1, 1);
+    public ServerImagesRun? LastRun { get; private set; }
+
+    public async Task<ServerImagesRun> ApplyAsync(CancellationToken cancellationToken)
+    {
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var plugin = Plugin.Instance;
+            if (!plugin.Configuration.ServerWideImages) return LastRun = new(DateTimeOffset.UtcNow, null, [], [], null);
+            var date = SeasonalCalendar.LocalDate(DateTimeOffset.UtcNow, plugin.Configuration.TimeZoneId);
+            var snapshot = catalog.Snapshot;
+            var shared = (await schedules.GetSharedAsync(cancellationToken).ConfigureAwait(false)).ToDictionary(s => s.Id, StringComparer.Ordinal);
+            // Apps cannot show a personal theme, so this is always what a user who follows the server default would see.
+            var themeId = ThemeResolver.Resolve(new(), plugin.ServerChoice, snapshot, date, shared, plugin.AutomaticExcluded).ThemeId;
+            var theme = themeId is null ? null : snapshot.Themes.GetValueOrDefault(themeId);
+            var folders = libraries.GetVirtualFolders().Where(f => Guid.TryParse(f.ItemId, out _)).ToList();
+            var slots = LibraryBanners.Assign(folders.Select(f => new LibraryInfo(f.ItemId, f.CollectionType?.ToString()?.ToLowerInvariant(), f.Name)));
+            var records = state.Load();
+            List<string> changed = [], restored = [];
+            foreach (var folder in folders)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var asset = theme is not null && slots.TryGetValue(folder.ItemId, out var slot) ? theme.Assets.GetValueOrDefault(slot) : null;
+                if (asset is null)
+                {
+                    // No themed banner for this library today: give back what it had.
+                    if (await RestoreAsync(folder.ItemId, records, cancellationToken).ConfigureAwait(false)) restored.Add(folder.Name);
+                    continue;
+                }
+                if (libraries.GetItemById(Guid.Parse(folder.ItemId)) is not { } item) continue;
+                records.TryGetValue(folder.ItemId, out var record);
+                if (record?.Applied == asset.Revision && item.HasImage(ImageType.Primary, 0)) continue;
+                if (record is null)
+                {
+                    // First change to this library: keep its own image (or the fact that it had none).
+                    var current = item.HasImage(ImageType.Primary, 0) ? item.GetImagePath(ImageType.Primary, 0) : null;
+                    record = new() { Backup = current is not null && File.Exists(current) ? state.Backup(folder.ItemId, current) : null };
+                    records[folder.ItemId] = record;
+                    state.Save(records);
+                }
+                await using (var stream = File.OpenRead(asset.Path))
+                    await providers.SaveImage(item, stream, asset.ContentType, ImageType.Primary, null, cancellationToken).ConfigureAwait(false);
+                await item.UpdateToRepositoryAsync(ItemUpdateType.ImageUpdate, cancellationToken).ConfigureAwait(false);
+                records[folder.ItemId] = record with { Applied = asset.Revision };
+                state.Save(records);
+                changed.Add(folder.Name);
+            }
+            if (changed.Count + restored.Count > 0)
+                logger.LogInformation("Theme Manager set library images for apps from theme {Theme}: changed {Changed}; restored {Restored}", themeId ?? "(original)", string.Join(", ", changed), string.Join(", ", restored));
+            return LastRun = new(DateTimeOffset.UtcNow, themeId, changed, restored, null);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogError(ex, "Theme Manager could not set library images for apps; library images are left as they were");
+            return LastRun = new(DateTimeOffset.UtcNow, null, [], [], ex.Message);
+        }
+        finally { _gate.Release(); }
+    }
+
+    /// <summary>Puts every library back as it was before the plugin changed it.</summary>
+    public async Task<ServerImagesRun> RestoreAllAsync(CancellationToken cancellationToken)
+    {
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var records = state.Load();
+            var names = libraries.GetVirtualFolders().ToDictionary(f => f.ItemId, f => f.Name, StringComparer.OrdinalIgnoreCase);
+            List<string> restored = [];
+            foreach (var id in records.Keys.ToList())
+                if (await RestoreAsync(id, records, cancellationToken).ConfigureAwait(false)) restored.Add(names.GetValueOrDefault(id, id));
+            logger.LogInformation("Theme Manager restored the original library images: {Restored}", string.Join(", ", restored));
+            return LastRun = new(DateTimeOffset.UtcNow, null, [], restored, null);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogError(ex, "Theme Manager could not restore all original library images; the backups are kept in {Folder}", state.Root);
+            return LastRun = new(DateTimeOffset.UtcNow, null, [], [], ex.Message);
+        }
+        finally { _gate.Release(); }
+    }
+
+    private async Task<bool> RestoreAsync(string libraryId, Dictionary<string, LibraryImageRecord> records, CancellationToken cancellationToken)
+    {
+        if (!records.TryGetValue(libraryId, out var record)) return false;
+        if (libraries.GetItemById(Guid.Parse(libraryId)) is { } item)
+        {
+            if (record.Backup is { } backup && File.Exists(backup))
+            {
+                await using (var stream = File.OpenRead(backup))
+                    await providers.SaveImage(item, stream, MimeFor(backup), ImageType.Primary, null, cancellationToken).ConfigureAwait(false);
+            }
+            else if (item.HasImage(ImageType.Primary, 0))
+            {
+                // The library had no image of its own before the plugin set one.
+                await item.DeleteImageAsync(ImageType.Primary, 0).ConfigureAwait(false);
+            }
+            await item.UpdateToRepositoryAsync(ItemUpdateType.ImageUpdate, cancellationToken).ConfigureAwait(false);
+        }
+        records.Remove(libraryId);
+        state.Save(records);
+        if (record.Backup is { } used && File.Exists(used)) File.Delete(used);
+        return true;
+    }
+
+    private static string MimeFor(string path) => Path.GetExtension(path).ToLowerInvariant() switch
+    {
+        ".jpg" or ".jpeg" => "image/jpeg", ".webp" => "image/webp", ".gif" => "image/gif", _ => "image/png",
+    };
+}
+
+public sealed class ApplyServerImagesTask(ServerImagesService images) : IScheduledTask
+{
+    public string Name => "Set library images for apps";
+    public string Key => "ThemeManagerServerImages";
+    public string Description => "When switched on in Theme Manager, sets each library's image from the server default theme for TV and mobile apps. Does nothing while switched off.";
+    public string Category => "Theme Manager";
+    public IEnumerable<TaskTriggerInfo> GetDefaultTriggers() =>
+    [
+        new() { Type = TaskTriggerInfoType.StartupTrigger },
+        // Shortly after midnight, when the calendar may move to a new theme.
+        new() { Type = TaskTriggerInfoType.DailyTrigger, TimeOfDayTicks = TimeSpan.FromMinutes(5).Ticks },
+    ];
+    public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
+    {
+        await images.ApplyAsync(cancellationToken).ConfigureAwait(false);
+        progress.Report(100);
+    }
+}
+
+[ApiController]
+[Authorize(Policy = Policies.RequiresElevation)]
+[Route("ThemeManager/Admin/ServerImages")]
+[ThemeManagerErrors]
+public sealed class ServerImagesController(ServerImagesService images) : ControllerBase
+{
+    [HttpGet]
+    public IActionResult Get() => new JsonResult(new { Enabled = Plugin.Instance.Configuration.ServerWideImages, images.LastRun }, ThemeJson.Options);
+
+    /// <summary>Switching on applies the theme now; switching off restores the original images.</summary>
+    [HttpPut]
+    public async Task<IActionResult> Set([FromBody] ServerImagesSetting setting, CancellationToken cancellationToken)
+    {
+        if (setting is null) return BadRequest();
+        Plugin.Instance.Configuration.ServerWideImages = setting.Enabled;
+        Plugin.Instance.SaveConfiguration();
+        var run = setting.Enabled ? await images.ApplyAsync(cancellationToken).ConfigureAwait(false) : await images.RestoreAllAsync(cancellationToken).ConfigureAwait(false);
+        return new JsonResult(run, ThemeJson.Options);
+    }
+
+    [HttpPost("Apply")]
+    public async Task<IActionResult> Apply(CancellationToken cancellationToken) => new JsonResult(await images.ApplyAsync(cancellationToken).ConfigureAwait(false), ThemeJson.Options);
+
+    [HttpPost("Restore")]
+    public async Task<IActionResult> Restore(CancellationToken cancellationToken) => new JsonResult(await images.RestoreAllAsync(cancellationToken).ConfigureAwait(false), ThemeJson.Options);
+}
+
+public sealed record ServerImagesSetting(bool Enabled);

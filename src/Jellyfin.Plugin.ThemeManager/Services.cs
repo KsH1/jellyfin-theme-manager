@@ -47,6 +47,8 @@ public sealed class ServiceRegistrator : IPluginServiceRegistrator
                 (path, ex) => logger.LogWarning(ex, "Theme Manager could not read calendar file {Path}; it is treated as empty until saved again", path));
         });
         services.AddSingleton<ThemePackInstaller>();
+        services.AddSingleton(provider => new ServerImageState(Path.Combine(provider.GetRequiredService<IApplicationPaths>().DataPath, "theme-manager", "server-images")));
+        services.AddSingleton<ServerImagesService>();
         services.AddTransient<Microsoft.AspNetCore.Hosting.IStartupFilter, FreshIndexStartupFilter>();
         services.AddSingleton(provider =>
         {

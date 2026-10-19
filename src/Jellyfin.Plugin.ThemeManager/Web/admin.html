@@ -9,6 +9,13 @@
     <p class="tm-web-state" style="padding:1em;border-radius:10px;background:#ffffff10"></p>
     <label style="display:flex;gap:.5em;align-items:center;margin:.8em 0"><input class="tm-web-enabled" type="checkbox" /> Show themes in the normal Jellyfin Web address (needs the File Transformation plugin)</label>
     <p>Always available: <a class="tm-web-link" target="_blank" rel="noopener"></a>. TV and mobile apps with their own interface do not show personal themes.</p>
+    <h2>TV and mobile apps</h2>
+    <p>Apps with their own interface (Android TV, Swiftfin, Roku and others) cannot show a personal theme. Theme Manager can instead set each library's image from the <b>server default</b> theme, changing with the calendar. The original images are backed up first and put back when you switch this off.</p>
+    <p style="padding:.6em 1em;border-left:3px solid #ffb74d;background:#ffb74d18">Switch off other tools that change library images first, for example a scheduled script, or they will overwrite each other.</p>
+    <label style="display:flex;gap:.5em;align-items:center;margin:.8em 0"><input class="tm-apps-enabled" type="checkbox" /> Set library images for TV and mobile apps</label>
+    <p class="tm-apps-state" style="opacity:.85"></p>
+    <button class="tm-apps-apply raised" is="emby-button" type="button">Apply now</button>
+    <button class="tm-apps-restore raised" is="emby-button" type="button">Restore original images</button>
     <h2>Theme gallery</h2>
     <label>Preview theme <select class="tm-gallery" is="emby-select" aria-label="Preview theme"></select></label>
     <section class="tm-preview" style="padding:2em;border-radius:18px;background:#080b12;background-size:cover;background-position:center;min-height:280px;margin:1.5em 0;color:white">
@@ -168,7 +175,34 @@
         NotChecked: 'Checking… The "Show theme in Jellyfin Web" task runs at server start.',
       }[web.state] || web.state;
     }
+    function describeRun(r) {
+      if (!r) return 'Not run since the server started.';
+      if (r.error) return 'Last run failed: ' + r.error + ' Library images were left as they were.';
+      const when = new Date(r.at).toLocaleString();
+      const parts = [];
+      if (r.changed.length) parts.push('set ' + r.changed.join(', '));
+      if (r.restored.length) parts.push('restored ' + r.restored.join(', '));
+      return 'Last run ' + when + (r.themeId ? ' (theme ' + r.themeId + ')' : '') + ': ' + (parts.join('; ') || 'nothing to change') + '.';
+    }
+    async function serverImages(result) {
+      const info = await api('Admin/ServerImages');
+      el('.tm-apps-enabled').checked = info.enabled;
+      el('.tm-apps-apply').disabled = !info.enabled;
+      el('.tm-apps-state').textContent = info.enabled ? 'On. ' + describeRun(result || info.lastRun) : 'Off. Library images are not changed by Theme Manager.' + (result?.restored?.length ? ' Restored: ' + result.restored.join(', ') + '.' : '');
+    }
     function run(fn) { return async function () { try { await fn(); } catch (error) { status(error.message); } }; }
+    el('.tm-apps-enabled').addEventListener('change', run(async () => {
+      const on = el('.tm-apps-enabled').checked;
+      if (!on && !confirm('Switch off and put the original library images back?')) { el('.tm-apps-enabled').checked = true; return; }
+      status(on ? 'Setting library images…' : 'Restoring original library images…');
+      const result = await api('Admin/ServerImages', 'PUT', { enabled: on }); await serverImages(result);
+      status(on ? 'Library images follow the server default theme. Apps show them after a refresh.' : 'Original library images restored.');
+    }));
+    el('.tm-apps-apply').addEventListener('click', run(async () => { status('Setting library images…'); await serverImages(await api('Admin/ServerImages/Apply', 'POST')); status('Done.'); }));
+    el('.tm-apps-restore').addEventListener('click', run(async () => {
+      if (!confirm('Put the original library images back now? While the setting is on, the next daily run sets the theme again.')) return;
+      status('Restoring original library images…'); await serverImages(await api('Admin/ServerImages/Restore', 'POST')); status('Original library images restored.');
+    }));
     el('.tm-web-enabled').addEventListener('change', run(async () => {
       await api('Admin/WebClient', 'PUT', { enabled: el('.tm-web-enabled').checked }); await webClient();
       status('Saved. Users see the change after reloading Jellyfin Web.');
@@ -210,6 +244,7 @@
     }));
     page.addEventListener('viewshow', run(load));
     page.addEventListener('viewshow', run(webClient));
+    page.addEventListener('viewshow', run(() => serverImages()));
     page.addEventListener('viewhide', release);
   }());
   </script>
