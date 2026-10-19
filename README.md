@@ -81,6 +81,8 @@ Click Theme Manager to open its settings:
 
 - **Where users see themes** says *Active* when File Transformation is in use.
 - **Server default** is *Automatic Seasonal*: the month's theme, with holidays taking over on their dates.
+- **Holidays in Automatic Seasonal**: untick holidays you do not celebrate. Outside Denmark, Fastelavn and Midsummer (Sankthans) start unticked.
+- **Calendar time zone** starts as the server's own time zone.
 - The 29 standard themes are installed automatically on first start.
 
 ![Theme Manager settings: where users see themes, and the theme gallery](docs/images/install-6-settings.png)
@@ -91,7 +93,7 @@ Users reload Jellyfin Web once after the install. The **Themes** button (bottom 
 
 ![The theme picker with a preview of the Halloween theme](docs/images/use-1-picker.png)
 
-Themes are grouped in tabs: Holidays, Months, Permanent and your own (Custom). Search looks through all tabs.
+Themes are grouped in tabs: Holidays, Months, Permanent and your own (Custom), each with a small preview of its artwork. Search looks through all tabs.
 
 ![The theme picker's category tabs](docs/images/use-2-picker-tabs.png)
 
@@ -120,7 +122,8 @@ To rebuild the standard packs from full-size PNGs: `python scripts/convert_packs
 - Automatic Seasonal: monthly themes plus holidays (New Year, Valentine's Day, Fastelavn, Easter, Midsummer, Halloween, Christmas); Easter-based dates are calculated each year.
 - Custom calendars: shared calendars made by an administrator, and one personal calendar per user.
 - Library banners on the home screen for every library, with a generic banner showing the library's name where a theme has no specific banner.
-- Theme picker with category tabs, search and live preview; previews use small copies made by the server.
+- Theme picker with category tabs, thumbnails, search and live preview; previews and thumbnails are small copies made by the server.
+- Neutral defaults for any country: the server's own time zone, and Danish-only holidays (Fastelavn, Midsummer) off outside Denmark.
 - Theme packs as data only (`theme.json` + images): no scripts or CSS are accepted from uploads.
 - Fail-safe: a broken pack or plugin error never stops Jellyfin; the reason goes to the server log.
 

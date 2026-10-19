@@ -84,6 +84,21 @@ try {
     Expect ($preview.Headers.'Content-Type' -contains 'image/webp' -and $preview.RawContentStream.Length -lt $asset.RawContentStream.Length / 5) 'Reduced WebP preview from Jellyfin encoder'
     Expect ($preview.Headers.'Cache-Control' -join ',' -match 'immutable') 'Revisioned preview is cacheable'
     Expect ((Status 'ThemeManager/Themes/halloween/Assets/movies/Preview') -eq 401) 'Anonymous preview access rejected'
+    $bgRevision=($catalog.themes | Where-Object id -eq 'halloween').assets.background.revision
+    $bgPreview=Invoke-WebRequest -Uri "$base/ThemeManager/Themes/halloween/Assets/background/Preview?v=$bgRevision" -Headers $admin
+    $thumb=Invoke-WebRequest -Uri "$base/ThemeManager/Themes/halloween/Assets/background/Preview?size=thumb&v=$bgRevision" -Headers $admin
+    Expect ($thumb.Headers.'Content-Type' -contains 'image/webp' -and $thumb.RawContentStream.Length -lt $bgPreview.RawContentStream.Length / 2) 'Small thumbnail for picker tiles'
+    # Holidays left out of Automatic Seasonal. Date-independent: whatever holiday is today is excluded and must give way to its month.
+    $settings=Request 'ThemeManager/Admin/Settings' 'GET' $null $admin
+    Expect ($settings.PSObject.Properties.Name -contains 'automaticExcluded') 'Admin settings list holidays left out of Automatic Seasonal'
+    $null=Request 'ThemeManager/Me' 'PUT' @{mode='Automatic'} $admin
+    $null=Request 'ThemeManager/Admin/Settings' 'PUT' @{choice=@{mode='Automatic'};timeZoneId='Europe/Copenhagen';automaticExcluded=@()} $admin
+    $today=(Request 'ThemeManager/Effective' 'GET' $null $admin).resolution.themeId
+    if ($today -notmatch '^month-\d\d$') {
+        $null=Request 'ThemeManager/Admin/Settings' 'PUT' @{choice=@{mode='Automatic'};timeZoneId='Europe/Copenhagen';automaticExcluded=@($today)} $admin
+        Expect ((Request 'ThemeManager/Effective' 'GET' $null $admin).resolution.themeId -match '^month-\d\d$') "Excluded holiday ($today) gives way to the month"
+        $null=Request 'ThemeManager/Admin/Settings' 'PUT' @{choice=@{mode='Automatic'};timeZoneId='Europe/Copenhagen';automaticExcluded=@()} $admin
+    } else { Write-Output "SKIP: no holiday today ($today), exclusion not exercised" }
     $page=Request 'web/ConfigurationPage?name=theme-manager' 'GET' $null $admin
     Expect ($page -match 'Theme Manager' -and $page -match 'tm-gallery') 'Embedded dashboard resource is served'
     $null=Request 'ThemeManager/Me' 'PUT' @{mode='Fixed';themeId='halloween'} $admin

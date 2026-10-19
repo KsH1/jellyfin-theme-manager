@@ -139,3 +139,10 @@ export function groupThemes(themes) {
     for (const list of result.values()) list.sort((a, b) => yearPosition(a.calendar) - yearPosition(b.calendar) || a.name.localeCompare(b.name));
     return result;
 }
+
+// The small, revisioned background copy for a picker tile; null for a palette-only theme.
+export function thumbnailPath(theme) {
+    const background = theme?.assets?.background;
+    if (!background) return null;
+    return 'Themes/' + encodeURIComponent(theme.id) + '/Assets/background/Preview?size=thumb' + (background.revision ? '&v=' + encodeURIComponent(background.revision) : '');
+}

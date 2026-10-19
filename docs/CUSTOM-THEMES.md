@@ -171,6 +171,10 @@ Example, the calendar tested for this guide:
 
 Administrators allow or block personal calendars with **Users may make their own personal calendar** under **Server default**.
 
+### Built-in holidays
+
+The built-in Automatic Seasonal can skip holidays: under **Server default**, untick them in **Holidays in Automatic Seasonal** and click **Save server default**. A skipped holiday shows the month's theme instead; users can still choose it as a fixed theme. Outside Denmark, Fastelavn and Midsummer start unticked. Your own calendars are not affected.
+
 ### Limits
 
 - Up to 50 shared calendars, and one personal calendar per user.

@@ -9,6 +9,30 @@
     "imageUrl": "https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/logo.png",
     "versions": [
       {
+        "version": "0.2.4.0",
+        "changelog": "Thumbnails in the theme picker; holidays can be left out of Automatic Seasonal (Danish-only holidays off outside Denmark); new installs use the server's own time zone.",
+        "targetAbi": "12.2.0.0",
+        "sourceUrl": "https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/repository/theme-manager_0.2.4.0.zip",
+        "checksum": "008AB9493215743B744DFBDEF077B36D",
+        "timestamp": "2026-10-19T17:00:05Z"
+      },
+      {
+        "version": "0.2.4.0",
+        "changelog": "Thumbnails in the theme picker; holidays can be left out of Automatic Seasonal (Danish-only holidays off outside Denmark); new installs use the server's own time zone.",
+        "targetAbi": "12.1.0.0",
+        "sourceUrl": "https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/repository/theme-manager_0.2.4.0-jf12.1.0.zip",
+        "checksum": "70CEEC62510378C6274BD1FB226E6B00",
+        "timestamp": "2026-10-19T16:59:55Z"
+      },
+      {
+        "version": "0.2.4.0",
+        "changelog": "Thumbnails in the theme picker; holidays can be left out of Automatic Seasonal (Danish-only holidays off outside Denmark); new installs use the server's own time zone.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/repository/theme-manager_0.2.4.0-jf12.0.0.zip",
+        "checksum": "60D97767F9CC11E1CC320E0306F39C9E",
+        "timestamp": "2026-10-19T16:59:42Z"
+      },
+      {
         "version": "0.2.3.0",
         "changelog": "Fix: browsers that had Jellyfin Web cached from before File Transformation was installed now get the theme after a normal reload.",
         "targetAbi": "12.2.0.0",

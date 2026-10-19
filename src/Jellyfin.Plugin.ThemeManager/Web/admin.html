@@ -28,7 +28,8 @@
     <label>Fixed theme <select class="tm-server-theme" is="emby-select"></select></label>
     <label>Calendar <select class="tm-server-schedule" is="emby-select"></select></label>
     <label style="display:flex;gap:.5em;align-items:center;margin:.8em 0"><input class="tm-allow-personal" type="checkbox" /> Users may make their own personal calendar</label>
-    <label>Calendar time zone <input class="tm-zone" is="emby-input" value="Europe/Copenhagen" /></label>
+    <label>Calendar time zone <input class="tm-zone" is="emby-input" /></label>
+    <fieldset class="tm-holidays" style="border:1px solid #ffffff30;border-radius:8px;margin:1em 0;padding:.6em 1em"><legend>Holidays in Automatic Seasonal</legend><p style="margin:.2em 0 .6em;font-size:.9em;opacity:.8">Unticked holidays are skipped; the month's theme shows instead. Users can still choose them as a fixed theme.</p><div class="tm-holiday-list" style="display:flex;flex-wrap:wrap;gap:.4em 1.4em"></div></fieldset>
     <button class="tm-save-server raised button-submit" is="emby-button" type="button">Save server default</button>
     <h2>Calendars</h2>
     <p>Your own "Automatic Seasonal": choose which theme shows on which dates. Shared calendars can be chosen as the server default and by every user.</p>
@@ -142,6 +143,12 @@
       el('.tm-user-mode').value = mine.mode; el('.tm-user-theme').value = mine.themeId || themes[0]?.id || '';
       el('.tm-server-mode').value = settings.choice.mode; el('.tm-server-theme').value = settings.choice.themeId || themes[0]?.id || '';
       el('.tm-zone').value = settings.timeZoneId;
+      // Holidays: calendar themes with a date rule other than a whole month.
+      const excluded = new Set(settings.automaticExcluded || []);
+      el('.tm-holiday-list').replaceChildren(...themes.filter(t => t.category === 'Calendar' && t.calendar && t.calendar.kind !== 'Month').map(t => {
+        const box = document.createElement('input'); box.type = 'checkbox'; box.value = t.id; box.checked = !excluded.has(t.id);
+        const label = document.createElement('label'); label.style.cssText = 'display:flex;gap:.4em;align-items:center'; label.append(box, t.name); return label;
+      }));
       if (effective.resolution.themeId) el('.tm-gallery').value = effective.resolution.themeId;
       status(themes.length + ' themes · Calendar date: ' + effective.localDate + ' · Effective choice: ' + (effective.theme?.name || 'Original Jellyfin'));
       modeControls(); await preview();
@@ -175,7 +182,7 @@
     }));
     el('.tm-save-server').addEventListener('click', run(async () => {
       const mode = el('.tm-server-mode').value;
-      await api('Admin/Settings', 'PUT', { choice: { mode, themeId: mode === 'Fixed' ? el('.tm-server-theme').value : null, scheduleId: mode === 'Schedule' ? el('.tm-server-schedule').value : null }, timeZoneId: el('.tm-zone').value, allowPersonalSchedules: el('.tm-allow-personal').checked });
+      await api('Admin/Settings', 'PUT', { choice: { mode, themeId: mode === 'Fixed' ? el('.tm-server-theme').value : null, scheduleId: mode === 'Schedule' ? el('.tm-server-schedule').value : null }, timeZoneId: el('.tm-zone').value, automaticExcluded: [...el('.tm-holiday-list').querySelectorAll('input:not(:checked)')].map(b => b.value), allowPersonalSchedules: el('.tm-allow-personal').checked });
       await load(); status('Server default saved. Existing branding is unchanged.');
     }));
     el('.tm-schedules').addEventListener('change', run(() => openEditor(el('.tm-schedules').value)));

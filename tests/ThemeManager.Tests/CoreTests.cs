@@ -51,6 +51,24 @@ public sealed class CoreTests : IDisposable
         Assert.NotNull(ThemeResolver.Resolve(new(ThemeMode.Fixed, "missing"), new(ThemeMode.Original), snapshot, date).Warning);
     }
 
+    [Fact]
+    public void ExcludedHolidayGivesWayToTheMonth()
+    {
+        Pack(new() { Id = "june", Name = "June", Calendar = new() { Month = 6 } });
+        Pack(new() { Id = "sankthans", Name = "Midsummer", Calendar = new() { Kind = "Range", Start = "06-23", End = "06-24", Priority = 80 } });
+        var snapshot = Catalog.Reload(); var date = new DateOnly(2026, 6, 23);
+        Assert.Equal("sankthans", ThemeResolver.Resolve(new(), new(ThemeMode.Automatic), snapshot, date).ThemeId);
+        Assert.Equal("june", ThemeResolver.Resolve(new(), new(ThemeMode.Automatic), snapshot, date, automaticExcluded: ["sankthans"]).ThemeId);
+        // A fixed choice of an excluded holiday still works: exclusion only affects Automatic Seasonal.
+        Assert.Equal("sankthans", ThemeResolver.Resolve(new(ThemeMode.Fixed, "sankthans"), new(ThemeMode.Automatic), snapshot, date, automaticExcluded: ["sankthans"]).ThemeId);
+    }
+
+    [Theory]
+    [InlineData("Europe/Copenhagen", "US", false)] [InlineData("America/New_York", "DK", false)]
+    [InlineData("America/New_York", "US", true)] [InlineData("Romance Standard Time", "FR", true)] [InlineData(null, null, true)]
+    public void DanishHolidaysAreOnlyDefaultInDenmark(string? zone, string? region, bool excluded)
+        => Assert.Equal(excluded ? RegionalDefaults.DanishHolidays : [], RegionalDefaults.Excluded(zone, region));
+
     [Theory]
     [InlineData("../escape.png")] [InlineData("/escape.png")] [InlineData("C:/escape.png")]
     [InlineData("a\\b.png")] [InlineData("a/../b.png")] [InlineData("a//b.png")]

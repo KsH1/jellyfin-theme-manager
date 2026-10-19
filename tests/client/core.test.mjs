@@ -167,3 +167,9 @@ test('server validation messages reach the user; bodies without one get the gene
         await assert.rejects(request(readSession(api(), base), 'Me'), /Theme request failed \(500\)/);
     } finally { globalThis.fetch = savedFetch; }
 });
+test('picker tiles use the small revisioned thumbnail, palette themes have none', async () => {
+    const { thumbnailPath } = await import('../../src/Jellyfin.Plugin.ThemeManager/Web/client-core.mjs');
+    assert.equal(thumbnailPath({ id: 'halloween', assets: { background: { revision: 'ab12' } } }), 'Themes/halloween/Assets/background/Preview?size=thumb&v=ab12');
+    assert.equal(thumbnailPath({ id: 'ocean-blue', assets: {} }), null);
+    assert.equal(thumbnailPath({ id: 'a b', assets: { background: {} } }), 'Themes/a%20b/Assets/background/Preview?size=thumb');
+});

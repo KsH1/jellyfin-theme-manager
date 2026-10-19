@@ -8,6 +8,8 @@ public sealed class PreviewCache(string root, Func<string, string, int, string> 
 {
     public const int BackgroundWidth = 1280;
     public const int BannerWidth = 640;
+    /// <summary>Small copies for the theme picker's tiles.</summary>
+    public const int ThumbnailWidth = 320;
     private readonly ConcurrentDictionary<string, Lazy<Task<string>>> _pending = new(StringComparer.Ordinal);
     private readonly SemaphoreSlim _encoders = new(2, 2);
     public string Root { get; } = Path.GetFullPath(root);
@@ -15,8 +17,10 @@ public sealed class PreviewCache(string root, Func<string, string, int, string> 
     public static int WidthFor(string slot) => slot is "background" or "splash" or "thumbnail" ? BackgroundWidth : BannerWidth;
 
     public async Task<string> GetAsync(ResolvedAsset asset, string slot, CancellationToken cancellationToken = default)
+        => await GetAsync(asset, WidthFor(slot), cancellationToken).ConfigureAwait(false);
+
+    public async Task<string> GetAsync(ResolvedAsset asset, int width, CancellationToken cancellationToken = default)
     {
-        var width = WidthFor(slot);
         var path = Path.Combine(Root, asset.Revision + "-" + width + extension);
         if (File.Exists(path)) return path;
         // Concurrent requests for one revision share a single encode; the shared task is not cancelled by one caller.

@@ -6,7 +6,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AnalysisLevel>latest</AnalysisLevel>
     <Deterministic>true</Deterministic>
-    <Version>0.2.3</Version>
+    <Version>0.2.4</Version>
     <Authors>Kenneth</Authors>
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>

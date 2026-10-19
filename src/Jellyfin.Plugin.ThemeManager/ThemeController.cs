@@ -9,7 +9,8 @@ using ThemeManager.Core;
 
 namespace Jellyfin.Plugin.ThemeManager;
 
-public sealed record ServerSettings(ThemeChoice Choice, string TimeZoneId, bool AllowPersonalSchedules = true);
+/// <param name="AutomaticExcluded">Theme ids left out of Automatic Seasonal; null keeps the current setting.</param>
+public sealed record ServerSettings(ThemeChoice Choice, string TimeZoneId, bool AllowPersonalSchedules = true, IReadOnlyList<string>? AutomaticExcluded = null);
 public sealed record ScheduleTest(ThemeSchedule Schedule, DateOnly? From = null);
 
 [ApiController]
@@ -80,7 +81,7 @@ public sealed class ThemeController(ThemeCatalog catalog, UserThemeStore users, 
     {
         if (Today() is not { } date) return Problem("The configured time zone is invalid. An administrator must correct it.");
         var snapshot = catalog.Snapshot;
-        var result = ThemeResolver.Resolve(choice, Plugin.Instance.ServerChoice, snapshot, date, available);
+        var result = ThemeResolver.Resolve(choice, Plugin.Instance.ServerChoice, snapshot, date, available, Plugin.Instance.AutomaticExcluded);
         return Data(new { Resolution = result, LocalDate = date, Theme = result.ThemeId is { } themeId ? Describe(snapshot.Themes[themeId]) : null, Rendering = "OptInWebClient", RefreshAfterSeconds = 60 });
     }
 
@@ -96,10 +97,12 @@ public sealed class ThemeController(ThemeCatalog catalog, UserThemeStore users, 
     }
 
     [HttpGet("Themes/{id}/Assets/{slot}/Preview")]
-    public async Task<IActionResult> AssetPreview(string id, string slot, [FromQuery] string? v, CancellationToken cancellationToken)
+    public async Task<IActionResult> AssetPreview(string id, string slot, [FromQuery] string? v, [FromQuery] string? size, CancellationToken cancellationToken)
     {
         if (!catalog.Snapshot.Themes.TryGetValue(id, out var theme) || !theme.Assets.TryGetValue(slot, out var asset)) return NotFound();
-        var path = await previews.GetAsync(asset, slot, cancellationToken).ConfigureAwait(false);
+        // Fixed sizes only, so a request cannot make the server encode arbitrary widths.
+        var width = size == "thumb" ? PreviewCache.ThumbnailWidth : PreviewCache.WidthFor(slot);
+        var path = await previews.GetAsync(asset, width, cancellationToken).ConfigureAwait(false);
         // Revisioned URLs never change content, so the browser may keep them; unversioned ones revalidate.
         Response.Headers.CacheControl = v == asset.Revision ? "private, max-age=31536000, immutable" : "private, max-age=0, must-revalidate";
         Response.Headers.XContentTypeOptions = "nosniff";
@@ -180,7 +183,7 @@ public sealed class ThemeController(ThemeCatalog catalog, UserThemeStore users, 
 
     [HttpGet("Admin/Settings")]
     [Authorize(Policy = Policies.RequiresElevation)]
-    public IActionResult GetSettings() => Data(new ServerSettings(Plugin.Instance.ServerChoice, Plugin.Instance.Configuration.TimeZoneId, Plugin.Instance.Configuration.AllowPersonalSchedules));
+    public IActionResult GetSettings() => Data(new ServerSettings(Plugin.Instance.ServerChoice, Plugin.Instance.Configuration.TimeZoneId, Plugin.Instance.Configuration.AllowPersonalSchedules, Plugin.Instance.AutomaticExcluded));
 
     [HttpPut("Admin/Settings")]
     [Authorize(Policy = Policies.RequiresElevation)]
@@ -193,6 +196,7 @@ public sealed class ThemeController(ThemeCatalog catalog, UserThemeStore users, 
             var shared = (await schedules.GetSharedAsync(cancellationToken).ConfigureAwait(false)).ToDictionary(s => s.Id, StringComparer.Ordinal);
             ThemeResolver.Validate(settings.Choice, catalog.Snapshot, allowFollowServer: false, shared);
             TimeZoneInfo.FindSystemTimeZoneById(settings.TimeZoneId);
+            if (settings.AutomaticExcluded?.Any(id => !SafePaths.IsId(id)) == true) throw new InvalidDataException("Holiday ids must be theme ids.");
         }
         catch (Exception ex) when (ex is InvalidDataException or TimeZoneNotFoundException or InvalidTimeZoneException) { return BadRequest(new { Error = ex.Message }); }
         // Use Jellyfin's native plugin configuration persistence, not a separate server settings file.
@@ -202,6 +206,7 @@ public sealed class ThemeController(ThemeCatalog catalog, UserThemeStore users, 
         configuration.ServerScheduleId = settings.Choice.Mode == ThemeMode.Schedule ? settings.Choice.ScheduleId : null;
         configuration.TimeZoneId = settings.TimeZoneId;
         configuration.AllowPersonalSchedules = settings.AllowPersonalSchedules;
+        if (settings.AutomaticExcluded is { } excluded) configuration.AutomaticExcluded = [.. excluded.Distinct(StringComparer.Ordinal)];
         Plugin.Instance.SaveConfiguration();
         return NoContent();
     }

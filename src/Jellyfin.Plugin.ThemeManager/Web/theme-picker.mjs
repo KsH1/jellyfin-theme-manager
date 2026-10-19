@@ -1,4 +1,4 @@
-import { Generation, ImageSet, groupThemes, groups, paletteVariables, request, sameSession, slots, themeGroup } from './client-core.mjs';
+import { Generation, ImageSet, groupThemes, groups, paletteVariables, request, sameSession, slots, themeGroup, thumbnailPath } from './client-core.mjs';
 import { createScheduleEditor, scheduleEditorCss } from './schedule-editor.mjs';
 
 export function createPicker(getSession, onSaved) {
@@ -77,7 +77,23 @@ export function createPicker(getSession, onSaved) {
         return all;
     }
     function clearPreview() { previewImages?.dispose(); previewImages = null; el('.banners').replaceChildren(); el('.swatches').replaceChildren(); el('.preview').style.backgroundImage = 'none'; }
-    function close() { generation.cancel(); opening.cancel(); clearPreview(); if (dialog.open) dialog.close(); session = null; }
+    // Tile thumbnails are fetched once per theme while the picker is open; the URLs are released when it closes.
+    const thumbs = new Map(), thumbJob = new Generation();
+    let thumbUrls = [];
+    function clearThumbs() { thumbJob.cancel(); thumbUrls.forEach(URL.revokeObjectURL); thumbUrls = []; thumbs.clear(); }
+    function thumbnail(theme, button, overlay) {
+        const path = thumbnailPath(theme);
+        if (!path || !session) return;
+        if (!thumbs.has(theme.id)) {
+            const captured = session, signal = thumbJob.controller?.signal ?? thumbJob.begin().signal;
+            thumbs.set(theme.id, fetch(new URL(path, captured.base), { headers: captured.headers, signal, cache: 'default', credentials: 'same-origin' })
+                .then(response => response.ok ? response.blob() : null)
+                .then(blob => { if (!blob || signal.aborted) return null; const url = URL.createObjectURL(blob); thumbUrls.push(url); return url; })
+                .catch(() => null));
+        }
+        thumbs.get(theme.id).then(url => { if (url && button.isConnected) button.style.background = overlay + ', url("' + url + '") center / cover'; });
+    }
+    function close() { generation.cancel(); opening.cancel(); clearPreview(); clearThumbs(); if (dialog.open) dialog.close(); session = null; }
     async function preview() {
         const job = generation.begin(); clearPreview(); el('.save').disabled = true;
         try {
@@ -137,6 +153,8 @@ export function createPicker(getSession, onSaved) {
             button.setAttribute('aria-pressed', String(choice().mode === 'Fixed' && selected === theme.id));
             const colors = paletteVariables(theme.palette);
             button.style.background = 'linear-gradient(135deg,' + colors['--tm-secondary'] + '55,' + colors['--tm-background'] + ')';
+            // Darken the lower part so the name stays readable on top of the artwork.
+            thumbnail(theme, button, 'linear-gradient(180deg,#0000 20%,#000c)');
             const name = document.createElement('span'); name.textContent = theme.name;
             const kind = document.createElement('small'); kind.textContent = theme.category + (Object.keys(theme.assets).length ? ' · Artwork' : ' · Palette');
             button.append(name, kind); button.addEventListener('click', () => { selected = theme.id; activeGroup = themeGroup(theme); el('.mode').value = 'Fixed'; gallery(); void preview(); });

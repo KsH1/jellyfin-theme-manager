@@ -3,7 +3,8 @@ namespace ThemeManager.Core;
 public static class ThemeResolver
 {
     /// <param name="schedules">Schedules the user may resolve: shared ones plus, under <see cref="ThemeSchedule.PersonalId"/>, their own.</param>
-    public static ThemeResolution Resolve(ThemeChoice user, ThemeChoice server, CatalogSnapshot catalog, DateOnly date, IReadOnlyDictionary<string, ThemeSchedule>? schedules = null)
+    /// <param name="automaticExcluded">Theme ids left out of Automatic Seasonal, e.g. holidays not celebrated where the server is.</param>
+    public static ThemeResolution Resolve(ThemeChoice user, ThemeChoice server, CatalogSnapshot catalog, DateOnly date, IReadOnlyDictionary<string, ThemeSchedule>? schedules = null, IReadOnlyCollection<string>? automaticExcluded = null)
     {
         var choice = user.Mode == ThemeMode.FollowServer ? server : user;
         var source = user.Mode == ThemeMode.FollowServer ? "Server" : "User";
@@ -11,7 +12,7 @@ public static class ThemeResolver
         if (choice.Mode == ThemeMode.Fixed && choice.ThemeId is { } id && catalog.Themes.ContainsKey(id)) return new(id, source);
         if (choice.Mode == ThemeMode.Schedule && choice.ScheduleId is { } scheduleId && schedules?.TryGetValue(scheduleId, out var schedule) == true)
             return new(ResolveSchedule(schedule, catalog, date), source);
-        var automatic = SeasonalCalendar.Resolve(catalog.Themes.Values, date);
+        var automatic = SeasonalCalendar.Resolve(catalog.Themes.Values.Where(t => automaticExcluded?.Contains(t.Manifest.Id) != true), date);
         var warning = choice.Mode switch
         {
             ThemeMode.Fixed => "The selected pack is unavailable; using the calendar or original Jellyfin.",
