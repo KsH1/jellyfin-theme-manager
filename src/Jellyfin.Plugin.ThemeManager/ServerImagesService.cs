@@ -40,13 +40,20 @@ public sealed class ServerImagesService(ILibraryManager libraries, IProviderMana
             var themeId = ThemeResolver.Resolve(new(), plugin.ServerChoice, snapshot, date, shared, plugin.AutomaticExcluded).ThemeId;
             var theme = themeId is null ? null : snapshot.Themes.GetValueOrDefault(themeId);
             var folders = libraries.GetVirtualFolders().Where(f => Guid.TryParse(f.ItemId, out _)).ToList();
-            var slots = LibraryBanners.Assign(folders.Select(f => new LibraryInfo(f.ItemId, f.CollectionType?.ToString()?.ToLowerInvariant(), f.Name)));
+            var slots = Slots(folders);
             var records = state.Load();
             List<string> changed = [], restored = [];
             foreach (var folder in folders)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                var themed = theme is not null && slots.TryGetValue(folder.ItemId, out var slot) ? theme.Assets.GetValueOrDefault(slot) : null;
+                slots.TryGetValue(folder.ItemId, out var slot);
+                if (slot == LibraryBanners.None)
+                {
+                    // The administrator keeps this library's own image.
+                    if (await RestoreAsync(folder.ItemId, records, cancellationToken).ConfigureAwait(false)) restored.Add(folder.Name);
+                    continue;
+                }
+                var themed = theme is not null && slot is not null ? theme.Assets.GetValueOrDefault(slot) : null;
                 // Libraries without a themed banner (e.g. Music) get a generic one: the theme background with the library name.
                 var asset = themed ?? (theme?.Assets.GetValueOrDefault("background") is { } background ? GenericBanner(folder.ItemId, folder.Name, background) : null);
                 if (asset is null)
@@ -83,6 +90,17 @@ public sealed class ServerImagesService(ILibraryManager libraries, IProviderMana
             return LastRun = new(DateTimeOffset.UtcNow, null, [], [], ex.Message);
         }
         finally { _gate.Release(); }
+    }
+
+    /// <summary>Banner slot per library (id as Jellyfin gives it), with the administrator's choices applied.</summary>
+    public IReadOnlyDictionary<string, string> Slots(IEnumerable<MediaBrowser.Model.Entities.VirtualFolderInfo> folders)
+    {
+        var chosen = Plugin.Instance.LibraryBannerChoices;
+        var list = folders.Where(f => Guid.TryParse(f.ItemId, out _)).ToList();
+        var byKey = list.ToDictionary(f => Guid.Parse(f.ItemId).ToString("N"), f => f.ItemId, StringComparer.Ordinal);
+        return LibraryBanners.Assign(
+            list.Select(f => new LibraryInfo(f.ItemId, f.CollectionType?.ToString()?.ToLowerInvariant(), f.Name)),
+            chosen.Where(c => byKey.ContainsKey(c.Key)).ToDictionary(c => byKey[c.Key], c => c.Value, StringComparer.Ordinal));
     }
 
     /// <summary>Puts every library back as it was before the plugin changed it.</summary>
@@ -213,4 +231,49 @@ public sealed class ServerImagesController(ServerImagesService images) : Control
     public async Task<IActionResult> Restore(CancellationToken cancellationToken) => new JsonResult(await images.RestoreAllAsync(cancellationToken).ConfigureAwait(false), ThemeJson.Options);
 }
 
+/// <summary>Which banner each library gets, in Jellyfin Web and (when switched on) in apps.</summary>
+[ApiController]
+[Authorize(Policy = Policies.RequiresElevation)]
+[Route("ThemeManager/Admin/Libraries")]
+[ThemeManagerErrors]
+public sealed class LibraryBannersController(ILibraryManager libraries, ServerImagesService images) : ControllerBase
+{
+    [HttpGet]
+    public IActionResult Get()
+    {
+        var folders = libraries.GetVirtualFolders().Where(f => Guid.TryParse(f.ItemId, out _)).ToList();
+        var chosen = Plugin.Instance.LibraryBannerChoices;
+        // Banner: what the library gets now, with the choices applied.
+        var current = images.Slots(folders);
+        return new JsonResult(new
+        {
+            Choices = LibraryBanners.Choices,
+            Libraries = folders.Select(f => new
+            {
+                Id = Guid.Parse(f.ItemId).ToString("N"), f.Name, CollectionType = f.CollectionType?.ToString(),
+                Banner = current.GetValueOrDefault(f.ItemId, LibraryBanners.Generic),
+                Choice = chosen.GetValueOrDefault(Guid.Parse(f.ItemId).ToString("N")),
+            }),
+        }, ThemeJson.Options);
+    }
+
+    /// <summary>Sets one library's banner; null or "auto" goes back to automatic. App images follow at once when switched on.</summary>
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Set(string id, [FromBody] LibraryBannerSetting setting, CancellationToken cancellationToken)
+    {
+        if (!Guid.TryParse(id, out var guid) || setting is null) return BadRequest();
+        var key = guid.ToString("N");
+        if (!libraries.GetVirtualFolders().Any(f => Guid.TryParse(f.ItemId, out var folder) && folder == guid)) return NotFound();
+        var choice = setting.Banner is null or "auto" ? null : setting.Banner;
+        if (choice is not null && !LibraryBanners.Choices.Contains(choice)) return BadRequest(new { Error = "Choose one of: auto, " + string.Join(", ", LibraryBanners.Choices) + "." });
+        var configuration = Plugin.Instance.Configuration;
+        var rest = Plugin.Instance.LibraryBannerChoices.Where(c => c.Key != key).Select(c => c.Key + "=" + c.Value);
+        configuration.LibraryBanners = [.. choice is null ? rest : rest.Append(key + "=" + choice)];
+        Plugin.Instance.SaveConfiguration();
+        if (configuration.ServerWideImages) await images.ApplyAsync(cancellationToken).ConfigureAwait(false);
+        return NoContent();
+    }
+}
+
 public sealed record ServerImagesSetting(bool Enabled);
+public sealed record LibraryBannerSetting(string? Banner);

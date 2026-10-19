@@ -25,6 +25,8 @@ Libraries without their own banner automatically get a generic banner: a slice o
 
 When there is more than one library of a type, the themed banner goes to the library whose name matches the type, such as "Movies", "Film" or "TV Shows". The others get the generic banner.
 
+An administrator can change this per library under **Library banners** on the plugin page: any theme banner, the background with the library name, or the library's own image.
+
 ### Image tips
 
 - **Formats:** PNG, JPEG or WebP. WebP at quality 85–90 is about a tenth of a PNG's size with no visible difference.

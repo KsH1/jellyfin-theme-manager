@@ -90,7 +90,7 @@ public sealed class ThemeController(ThemeCatalog catalog, UserThemeStore users, 
         if (Today() is not { } date) return Problem("The configured time zone is invalid. An administrator must correct it.");
         var snapshot = catalog.Snapshot;
         var result = ThemeResolver.Resolve(choice, Plugin.Instance.ServerChoice, snapshot, date, available, Plugin.Instance.AutomaticExcluded);
-        return Data(new { Resolution = result, LocalDate = date, Theme = result.ThemeId is { } themeId ? Describe(snapshot.Themes[themeId]) : null, Rendering = "OptInWebClient", Effects = Plugin.Instance.Configuration.AllowEffects, RefreshAfterSeconds = 60 });
+        return Data(new { Resolution = result, LocalDate = date, Theme = result.ThemeId is { } themeId ? Describe(snapshot.Themes[themeId]) : null, Rendering = "OptInWebClient", Effects = Plugin.Instance.Configuration.AllowEffects, LibraryBanners = Plugin.Instance.LibraryBannerChoices, RefreshAfterSeconds = 60 });
     }
 
     [HttpGet("Themes/{id}/Assets/{slot}")]

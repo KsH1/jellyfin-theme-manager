@@ -68,6 +68,21 @@ try {
     $again = Api 'ThemeManager/Admin/ServerImages/Apply' 'POST'
     Expect (@($again.changed).Count -eq 0) 'an unchanged theme writes nothing'
 
+    $libraries = @((Api 'ThemeManager/Admin/Libraries').libraries)
+    $bannerOf = @{}; $libraries | ForEach-Object { $bannerOf[$_.name] = $_.banner }
+    Expect ($bannerOf['Film'] -eq 'movies' -and $bannerOf['TV Shows'] -eq 'tvShows' -and $bannerOf['Musik'] -eq 'generic') 'library list shows the automatic banners'
+    $musik = ($libraries | Where-Object name -eq 'Musik').id; $film = ($libraries | Where-Object name -eq 'Film').id
+    Api "ThemeManager/Admin/Libraries/$musik" 'PUT' @{ banner = 'movies' } | Out-Null
+    Expect ((PrimarySize 'Musik') -eq $moviesSize) 'a library can be given another banner'
+    Api "ThemeManager/Admin/Libraries/$film" 'PUT' @{ banner = 'none' } | Out-Null
+    Expect ((PrimarySize 'Film') -eq $originalSize) "'own image' gives a library its original image back"
+    Expect ((Api 'ThemeManager/Effective').libraryBanners.$film -eq 'none') 'Jellyfin Web gets the choices'
+    $bad = Invoke-WebRequest "$base/ThemeManager/Admin/Libraries/$film" -Method Put -Headers $h -ContentType 'application/json' -Body '{"banner":"poster"}' -SkipHttpErrorCheck
+    Expect ($bad.StatusCode -eq 400) 'an unknown banner choice is rejected'
+    Api "ThemeManager/Admin/Libraries/$musik" 'PUT' @{ banner = 'auto' } | Out-Null
+    Api "ThemeManager/Admin/Libraries/$film" 'PUT' @{ banner = 'auto' } | Out-Null
+    Expect ((PrimarySize 'Film') -eq $moviesSize -and (PrimarySize 'Musik') -gt 0 -and (PrimarySize 'Musik') -ne $moviesSize) 'automatic again restores the automatic banners'
+
     Api 'ThemeManager/Admin/Settings' 'PUT' @{ choice = @{ mode = 'Original' }; timeZoneId = 'Europe/Copenhagen' } | Out-Null
     $restored = Api 'ThemeManager/Admin/ServerImages/Apply' 'POST'
     Expect (@($restored.restored).Count -eq 3) 'Original Jellyfin as server default restores all three libraries'

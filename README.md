@@ -109,7 +109,7 @@ The original library images are backed up before they are first replaced. Switch
 
 **Your own themes and calendars:** see [docs/CUSTOM-THEMES.md](docs/CUSTOM-THEMES.md). A ready-to-import example is in [`examples/sample-aurora.zip`](examples/sample-aurora.zip).
 
-The 29 standard themes (`default-packs/`) are 19 calendar themes with artwork (months and holidays) and 10 colour themes. A theme that already exists is never overwritten, and a standard theme an administrator deletes is not brought back.
+The 29 standard themes (`default-packs/`) are 19 calendar themes with artwork (months and holidays) and 10 colour themes. A theme that already exists is never overwritten, and a standard theme an administrator deletes is not brought back. To leave a standard theme out of the picker without deleting it, untick it under **Theme packs → Installed themes**.
 
 ## Troubleshooting
 
@@ -132,10 +132,11 @@ To rebuild the standard packs from full-size PNGs: `python scripts/convert_packs
 - A personal theme per user: follow the server default, Automatic Seasonal, a fixed theme, a calendar, or original Jellyfin. Saved per Jellyfin account.
 - Automatic Seasonal: monthly themes plus holidays (New Year, Valentine's Day, Fastelavn, Easter, Midsummer, Halloween, Christmas); Easter-based dates are calculated each year.
 - Custom calendars: shared calendars made by an administrator, and one personal calendar per user.
-- Library banners on the home screen for every library, with a generic banner showing the library's name where a theme has no specific banner.
+- Library banners on the home screen for every library, with a generic banner showing the library's name where a theme has no specific banner. An administrator can choose the banner per library, or keep a library's own image.
 - Theme picker with category tabs, thumbnails, search and live preview; previews and thumbnails are small copies made by the server.
 - Neutral defaults for any country: the server's own time zone, and Danish-only holidays (Fastelavn, Midsummer) off outside Denmark.
 - Theme packs as data only (`theme.json` + images): no scripts or CSS are accepted from uploads.
+- Theme management on the settings page: hide a theme from the picker, export it as ZIP, replace it with a new version, or delete it. Deleted and replaced versions are kept on the server.
 - Library banners for TV and mobile apps from the server default theme, with backup and exact restore of the original images (off by default).
 - Seasonal effects (snow, leaves, hearts, confetti) that users and administrators can switch off.
 - A status panel on the settings page that also tells you when a newer version is installed but needs Jellyfin to be stopped and started.

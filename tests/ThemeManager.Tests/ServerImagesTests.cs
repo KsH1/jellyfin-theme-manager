@@ -19,6 +19,14 @@ public sealed class ServerImagesTests : IDisposable
     }
 
     [Fact]
+    public void AdministratorChoiceWinsAndLeavesTheAutomaticRule()
+    {
+        var assigned = LibraryBanners.Assign([new("a", "movies", "Film"), new("b", "movies", "Classics"), new("c", "music", "Musik"), new("d", "tvshows", "TV")],
+            new Dictionary<string, string> { ["a"] = LibraryBanners.Generic, ["c"] = "movies", ["d"] = LibraryBanners.None, ["x"] = "bogus" });
+        Assert.Equal(new Dictionary<string, string> { ["b"] = "movies", ["c"] = "movies", ["d"] = LibraryBanners.None }, assigned);
+    }
+
+    [Fact]
     public void FirstLibraryOfATypeWinsWithoutANamedOne()
         => Assert.Equal("movies", LibraryBanners.Assign([new("a", "movies", "Kids"), new("b", "movies", "Classics")])["a"]);
 

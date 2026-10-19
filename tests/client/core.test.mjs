@@ -53,6 +53,17 @@ test('every library gets a card; only the first of each themed type uses its ban
     assert.match(result.get('4'.repeat(32)).position, /^\d{1,3}%$/);
     assert.equal(librarySlots({ Items: [{ Id: '7'.repeat(32), Name: 'x'.repeat(200) }] }).get('7'.repeat(32)).name.length, 60);
 });
+test('an administrator choice per library wins and leaves the automatic rule', () => {
+    const items = { Items: [
+        { Id: '1'.repeat(32), CollectionType: 'movies', Name: 'Film' },
+        { Id: '2'.repeat(32), CollectionType: 'movies', Name: 'Classics' },
+        { Id: '3'.repeat(32), CollectionType: 'music', Name: 'Musik' },
+        { Id: '4'.repeat(32), CollectionType: 'tvshows', Name: 'TV' },
+        { Id: '5'.repeat(32), CollectionType: 'tvshows', Name: 'Anime' }
+    ] };
+    const result = librarySlots(items, { ['1'.repeat(32)]: 'generic', ['3'.repeat(32)]: 'movies', ['4'.repeat(32)]: 'none', ['5'.repeat(32)]: 'bogus' });
+    assert.deepEqual([...result.entries()].map(([id, v]) => id[0] + ':' + v.slot), ['1:null', '2:movies', '3:movies', '5:tvShows']);
+});
 test('palette rejects CSS injection and computes contrast', () => {
     const values = paletteVariables({ accent: 'url(https://evil.test)', text: '#123456', background: 'red;display:none' });
     assert.equal(values['--tm-accent'], '#00a4dc'); assert.equal(values['--tm-text'], '#123456'); assert.equal(values['--tm-background'], '#080b12');

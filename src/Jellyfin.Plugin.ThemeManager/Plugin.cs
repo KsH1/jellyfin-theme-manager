@@ -24,6 +24,8 @@ public sealed class PluginConfiguration : BasePluginConfiguration
     public bool AllowEffects { get; set; }
     /// <summary>Theme ids left out of the theme picker. Users who already chose one keep it, and calendars still use it.</summary>
     public string[] HiddenThemes { get; set; } = [];
+    /// <summary>Banner per library as "libraryId=choice" (see <see cref="ThemeManager.Core.LibraryBanners.Choices"/>); a library not listed is automatic.</summary>
+    public string[] LibraryBanners { get; set; } = [];
 }
 
 public sealed class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
@@ -41,6 +43,13 @@ public sealed class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     /// <summary>The administrator's choice, or by default the Danish holidays on servers outside Denmark.</summary>
     public IReadOnlyList<string> AutomaticExcluded => Configuration.AutomaticExcluded
         ?? RegionalDefaults.Excluded(Configuration.TimeZoneId, System.Globalization.RegionInfo.CurrentRegion.TwoLetterISORegionName);
+
+    /// <summary>The administrator's banner choices, keyed by library id without dashes.</summary>
+    public IReadOnlyDictionary<string, string> LibraryBannerChoices => Configuration.LibraryBanners
+        .Select(entry => entry.Split('=', 2))
+        .Where(parts => parts.Length == 2 && Guid.TryParse(parts[0], out _) && LibraryBanners.Choices.Contains(parts[1]))
+        .GroupBy(parts => Guid.Parse(parts[0]).ToString("N"))
+        .ToDictionary(group => group.Key, group => group.Last()[1], StringComparer.Ordinal);
 
     public ThemeChoice ServerChoice => new(Enum.TryParse<ThemeMode>(Configuration.ServerMode, out var mode) && Enum.IsDefined(mode) && mode != ThemeMode.FollowServer ? mode : ThemeMode.Automatic, Configuration.ServerThemeId, Configuration.ServerScheduleId);
 }

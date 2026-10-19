@@ -18,6 +18,9 @@
     <p class="tm-apps-state" style="opacity:.85"></p>
     <button class="tm-apps-apply raised" is="emby-button" type="button">Apply now</button>
     <button class="tm-apps-restore raised" is="emby-button" type="button">Restore original images</button>
+    <h2>Library banners</h2>
+    <p>Which banner each library card gets, in Jellyfin Web and in the library images for apps. <i>Automatic</i> gives the theme's banner to one library per type, preferring the one named like the type ("Movies", "Film"), and a banner with its name to the rest.</p>
+    <div style="overflow-x:auto"><table class="tm-libraries" style="width:100%;border-collapse:collapse"><thead><tr style="text-align:left"><th>Library</th><th>Type</th><th>Banner</th></tr></thead><tbody></tbody></table></div>
     <h2>Theme gallery</h2>
     <label>Preview theme <select class="tm-gallery" is="emby-select" aria-label="Preview theme"></select></label>
     <section class="tm-preview" style="padding:2em;border-radius:18px;background:#080b12;background-size:cover;background-position:center;min-height:280px;margin:1.5em 0;color:white">
@@ -142,6 +145,24 @@
         test: (value, from) => api('Schedules/Test', 'POST', { schedule: value, from }),
       });
       editor.lockId(!!schedule); el('.tm-delete-schedule').disabled = !schedule;
+    }
+    const bannerNames = { movies: 'Movies banner', tvShows: 'TV Shows banner', collections: 'Collections banner', generic: 'Background with the library name', none: "The library's own image" };
+    async function libraryTable() {
+      const info = await api('Admin/Libraries');
+      el('.tm-libraries tbody').replaceChildren(...info.libraries.map(library => {
+        const row = document.createElement('tr'); row.style.borderTop = '1px solid #ffffff20';
+        const name = document.createElement('td'); name.textContent = library.name;
+        const type = document.createElement('td'); type.textContent = library.collectionType || 'Mixed';
+        const select = document.createElement('select'); select.setAttribute('is', 'emby-select'); select.setAttribute('aria-label', 'Banner for ' + library.name);
+        const automatic = library.choice ? 'Automatic' : 'Automatic (' + bannerNames[library.banner] + ')';
+        fill(select, [['auto', automatic], ...info.choices.map(c => [c, bannerNames[c] || c])], library.choice || 'auto');
+        select.addEventListener('change', run(async () => {
+          await api('Admin/Libraries/' + library.id, 'PUT', { banner: select.value }); await libraryTable();
+          status(library.name + ': ' + (select.value === 'auto' ? 'Automatic' : bannerNames[select.value]) + '. Users see it when Jellyfin Web next refreshes, within a minute.');
+        }));
+        const cell = document.createElement('td'); cell.append(select);
+        row.append(name, type, cell); return row;
+      }));
     }
     function themeTable(server) {
       const button = (text, action) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'raised'; b.setAttribute('is', 'emby-button'); b.textContent = text; b.style.margin = '.2em'; b.addEventListener('click', run(action)); return b; };
@@ -299,6 +320,7 @@
     page.addEventListener('viewshow', run(webClient));
     page.addEventListener('viewshow', run(() => serverImages()));
     page.addEventListener('viewshow', run(health));
+    page.addEventListener('viewshow', run(libraryTable));
     page.addEventListener('viewhide', release);
   }());
   </script>

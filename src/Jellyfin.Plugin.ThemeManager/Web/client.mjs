@@ -4,7 +4,7 @@ import { createPicker } from './theme-picker.mjs';
 
 const pluginBase = new URL('../', import.meta.url);
 const guard = new Generation();
-let session = null, activeTheme = null, images = null, signature = '', libraryMap = new Map();
+let session = null, activeTheme = null, images = null, signature = '', libraryMap = new Map(), bannerChoices = '{}';
 let nextRefresh = 0, inFlight = false, stopped = false, frame = 0;
 const decorated = new Set();
 const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = new URL('./client.css', import.meta.url); css.dataset.themeManager = 'client';
@@ -77,7 +77,10 @@ async function sync(force = false) {
         if (nextSignature !== signature) {
             clearDecoration(); images?.dispose(); images = pendingImages; pendingImages = null;
         }
-        activeTheme = effective.theme; signature = nextSignature; libraryMap = librarySlots(views); effectsAllowed = effective.effects === true;
+        // A library switched to "none" must lose the banner it already has.
+        const nextChoices = JSON.stringify(effective.libraryBanners || {});
+        if (nextChoices !== bannerChoices) { clearDecoration(); bannerChoices = nextChoices; }
+        activeTheme = effective.theme; signature = nextSignature; libraryMap = librarySlots(views, effective.libraryBanners); effectsAllowed = effective.effects === true;
         nextRefresh = Date.now() + 60000; decorate();
     } catch (error) {
         pendingImages?.dispose();

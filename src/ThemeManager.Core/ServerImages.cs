@@ -25,17 +25,34 @@ public static class LibraryBanners
 
     private static string Plain(string? name) => new((name ?? "").ToLowerInvariant().Where(char.IsLetterOrDigit).ToArray());
 
-    /// <summary>Library id to banner slot, for the libraries that get one.</summary>
-    public static IReadOnlyDictionary<string, string> Assign(IEnumerable<LibraryInfo> libraries)
+    /// <summary>An administrator's choice: the theme's background with the library name.</summary>
+    public const string Generic = "generic";
+    /// <summary>An administrator's choice: leave the library's own image.</summary>
+    public const string None = "none";
+    /// <summary>What an administrator may choose for one library; no choice means automatic.</summary>
+    public static readonly IReadOnlyList<string> Choices = ["movies", "tvShows", "collections", Generic, None];
+
+    /// <summary>
+    /// Library id to banner slot, for the libraries that get one. A library the administrator chose for gets that choice
+    /// (<see cref="None"/> included; <see cref="Generic"/> means no entry) and takes no part in the automatic rule.
+    /// </summary>
+    public static IReadOnlyDictionary<string, string> Assign(IEnumerable<LibraryInfo> libraries, IReadOnlyDictionary<string, string>? chosen = null)
     {
         var owner = new Dictionary<string, (string Id, bool Named)>(StringComparer.Ordinal);
+        var result = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var library in libraries)
         {
+            if (chosen?.GetValueOrDefault(library.Id) is { } choice && Choices.Contains(choice))
+            {
+                if (choice != Generic) result[library.Id] = choice;
+                continue;
+            }
             if (library.CollectionType is null || !BannerTypes.TryGetValue(library.CollectionType, out var slot)) continue;
             var named = TypeNames[slot].Contains(Plain(library.Name));
             if (!owner.TryGetValue(slot, out var current) || (named && !current.Named)) owner[slot] = (library.Id, named);
         }
-        return owner.ToDictionary(p => p.Value.Id, p => p.Key, StringComparer.Ordinal);
+        foreach (var (slot, library) in owner) result[library.Id] = slot;
+        return result;
     }
 }
 
