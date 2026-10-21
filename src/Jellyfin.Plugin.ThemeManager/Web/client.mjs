@@ -82,7 +82,7 @@ async function sync(force = false) {
             request(captured, captured.viewsUrl, { signal: job.signal })
         ]);
         const nextSignature = themeSignature(effective.theme);
-        if (effective.theme && nextSignature !== signature) pendingImages = await new ImageSet().load(captured, effective.theme, job.signal, ['collections', 'movies', 'tvShows']);
+        if (effective.theme && nextSignature !== signature) pendingImages = await new ImageSet().load(captured, effective.theme, job.signal, ['collections', 'movies', 'tvShows', 'liveTv']);
         if (!job.current() || !sameSession(captured, current())) { pendingImages?.dispose(); return; }
         if (nextSignature !== signature) {
             clearDecoration(); images?.dispose(); images = pendingImages; pendingImages = null;

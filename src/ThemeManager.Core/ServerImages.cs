@@ -14,13 +14,14 @@ public static class LibraryBanners
 {
     private static readonly Dictionary<string, string> BannerTypes = new(StringComparer.Ordinal)
     {
-        ["movies"] = "movies", ["tvshows"] = "tvShows", ["boxsets"] = "collections",
+        ["movies"] = "movies", ["tvshows"] = "tvShows", ["boxsets"] = "collections", ["livetv"] = "liveTv",
     };
     private static readonly Dictionary<string, string[]> TypeNames = new(StringComparer.Ordinal)
     {
         ["movies"] = ["movies", "movie", "film", "films", "filmer", "spillefilm"],
         ["tvShows"] = ["tvshows", "tv", "series", "serier", "shows", "tvserier"],
         ["collections"] = ["collections", "samlinger", "boxsets"],
+        ["liveTv"] = ["livetv", "live", "tvguide"],
     };
 
     private static string Plain(string? name) => new((name ?? "").ToLowerInvariant().Where(char.IsLetterOrDigit).ToArray());
@@ -30,7 +31,7 @@ public static class LibraryBanners
     /// <summary>An administrator's choice: leave the library's own image.</summary>
     public const string None = "none";
     /// <summary>What an administrator may choose for one library; no choice means automatic.</summary>
-    public static readonly IReadOnlyList<string> Choices = ["movies", "tvShows", "collections", Generic, None];
+    public static readonly IReadOnlyList<string> Choices = ["movies", "tvShows", "collections", "liveTv", Generic, None];
 
     /// <summary>
     /// Library id to banner slot, for the libraries that get one. A library the administrator chose for gets that choice

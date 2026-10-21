@@ -106,15 +106,15 @@
       el('.tm-kind').textContent = theme.category + (Object.keys(theme.assets).length ? ' · Artwork included' : ' · Palette preset — bespoke artwork pending');
       el('.tm-accent').style.background = theme.palette.accent;
       el('.tm-accent').style.color = '#080b12';
-      await Promise.all(['background', 'collections', 'movies', 'tvShows'].map(async slot => {
+      await Promise.all(['background', 'collections', 'movies', 'tvShows', 'liveTv'].map(async slot => {
         if (!theme.assets[slot]) return;
         const url = await asset(theme.id, slot, current, theme.assets[slot].revision); if (!url || current !== generation) return;
         if (slot === 'background') panel.style.backgroundImage = 'linear-gradient(#0005,#0008),url("' + url + '")';
         else {
-          const img = document.createElement('img'); img.src = url; img.alt = { collections: 'Collections', movies: 'Movies', tvShows: 'TV Shows' }[slot];
+          const img = document.createElement('img'); img.src = url; img.alt = { collections: 'Collections', movies: 'Movies', tvShows: 'TV Shows', liveTv: 'Live TV' }[slot];
           img.style.cssText = 'width:30%;min-width:160px;aspect-ratio:16/9;object-fit:cover;border-radius:10px';
           img.dataset.slot = slot; el('.tm-banners').appendChild(img);
-          const order = ['collections', 'movies', 'tvShows'];
+          const order = ['collections', 'movies', 'tvShows', 'liveTv'];
           [...el('.tm-banners').children].sort((a,b) => order.indexOf(a.dataset.slot) - order.indexOf(b.dataset.slot)).forEach(n => el('.tm-banners').appendChild(n));
         }
       }));
@@ -146,7 +146,7 @@
       });
       editor.lockId(!!schedule); el('.tm-delete-schedule').disabled = !schedule;
     }
-    const bannerNames = { movies: 'Movies banner', tvShows: 'TV Shows banner', collections: 'Collections banner', generic: 'Background with the library name', none: "The library's own image" };
+    const bannerNames = { movies: 'Movies banner', tvShows: 'TV Shows banner', collections: 'Collections banner', liveTv: 'Live TV banner', generic: 'Background with the library name', none: "The library's own image" };
     async function libraryTable() {
       const info = await api('Admin/Libraries');
       el('.tm-libraries tbody').replaceChildren(...info.libraries.map(library => {

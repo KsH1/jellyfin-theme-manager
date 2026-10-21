@@ -36,7 +36,7 @@ Dette eksempel med billeder er først gyldigt, når de nævnte filer findes. `ex
 - `category`: `Calendar`, `Permanent` eller `Custom`.
 - `extends`: valgfrit ID på en allerede installeret forælder. Arver billeder og farver, hvorefter lokale felter overskriver. Cirkler og kæder over 16 niveauer afvises.
 - `palette`: kun de fem viste felter, kun `#RRGGBB`. Manglende felter får standardfarver eller arves.
-- `assets`: valgfri nøgler `background`, `splash`, `thumbnail`, `collections`, `movies`, `tvShows`. Manglende nøgler arves, ellers mangler billedet. En **erklæret** fil, der ikke findes, gør pakken ugyldig.
+- `assets`: valgfri nøgler `background`, `splash`, `thumbnail`, `collections`, `movies`, `tvShows`, `liveTv` (fra 0.3.4). Manglende nøgler arves, ellers mangler billedet. En **erklæret** fil, der ikke findes, gør pakken ugyldig.
 - `calendar`: valgfri kalenderregel. Kun pakker med regel indgår automatisk, uanset kategori.
 
 Ukendte JSON-felter afvises, så stavefejl ikke stiltiende ignoreres. Manifestet må højst være 64 KiB og JSON-dybden højst 16.

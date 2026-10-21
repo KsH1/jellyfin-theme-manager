@@ -18,10 +18,11 @@ Everything here works in Theme Manager 0.2.0.0 and later; hiding, exporting, del
 | movies image | Banner on the first Movies library card | No |
 | tv-shows image | Banner on the first TV Shows library card | No |
 | collections image | Banner on the Collections card | No |
+| live TV image | Banner on the Live TV card | No |
 
 A theme with no images at all is a colour theme. It changes the colours but leaves the library cards alone.
 
-Libraries without their own banner automatically get a generic banner: a slice of your background with the library's name on it. This applies to music, books, home videos and second movie libraries. So you do not need a banner for every library.
+Libraries without their own banner automatically get a generic banner: a slice of your background with the library's name on it. This applies to music, books, home videos, second movie libraries and Live TV when the theme has no Live TV banner. So you do not need a banner for every library.
 
 When there is more than one library of a type, the themed banner goes to the library whose name matches the type, such as "Movies", "Film" or "TV Shows". The others get the generic banner.
 
@@ -82,7 +83,7 @@ This is the included example, [`examples/sample-aurora/theme.json`](../examples/
 | `version` | Numbers only, e.g. `1.0.0` (not `1.0-beta`). |
 | `category` | Picks the tab in the theme picker: `Permanent` (year-round), `Calendar` (months and holidays) or `Custom`. |
 | `palette` | Optional. Up to five colours as `#RRGGBB`: `accent` (buttons), `secondary`, `surface` (header and menu), `text` and `background`. Missing colours get defaults. |
-| `assets` | Optional. Slots `background`, `movies`, `tvShows`, `collections`. Every file you name must exist in the ZIP. `splash` and `thumbnail` are accepted but not shown anywhere yet. |
+| `assets` | Optional. Slots `background`, `movies`, `tvShows`, `collections`, `liveTv` (Theme Manager 0.3.4 and later). Every file you name must exist in the ZIP. `splash` and `thumbnail` are accepted but not shown anywhere yet. |
 | `extends` | Optional. The id of an installed theme to inherit images and colours from; your own fields win. |
 | `calendar` | Optional. Makes the theme part of the built-in "Automatic Seasonal". Most people should use a calendar (Part 2) instead. |
 | `effect` | Optional. A seasonal effect in Jellyfin Web: `snow`, `leaves`, `hearts`, `confetti` or `none`. Effects only show after an administrator switches them on; users can switch them off in the theme picker, and they never show when the system asks for reduced motion. |

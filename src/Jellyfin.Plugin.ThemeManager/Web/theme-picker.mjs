@@ -1,4 +1,4 @@
-import { Generation, ImageSet, effectsStorageKey, groupThemes, groups, paletteVariables, request, sameSession, slots, themeGroup, thumbnailPath } from './client-core.mjs';
+import { Generation, ImageSet, bannerSlots, effectsStorageKey, groupThemes, groups, paletteVariables, request, sameSession, slots, themeGroup, thumbnailPath } from './client-core.mjs';
 import { createScheduleEditor, scheduleEditorCss } from './schedule-editor.mjs';
 
 export function createPicker(getSession, onSaved, onEffects = () => {}) {
@@ -106,16 +106,16 @@ export function createPicker(getSession, onSaved, onEffects = () => {}) {
             el('.preview').style.backgroundColor = theme?.palette.background || '#101010';
             if (theme) {
                 for (const [key, value] of Object.entries(paletteVariables(theme.palette))) {
-                    if (key === '--tm-accent-contrast') continue;
+                    if (key === '--tm-accent-contrast' || key === '--tm-accent-channel') continue;
                     const swatch = document.createElement('span'); swatch.style.background = value; swatch.title = key.replace('--tm-', ''); el('.swatches').append(swatch);
                 }
                 const images = await new ImageSet().load(session, theme, job.signal, slots);
                 if (!job.current() || !valid()) { images.dispose(); return; }
                 previewImages = images;
                 if (images.urls.background) el('.preview').style.backgroundImage = 'url("' + images.urls.background + '")';
-                for (const slot of ['collections', 'movies', 'tvShows']) {
+                for (const [slot, name] of bannerSlots) {
                     if (!images.urls[slot]) continue;
-                    const img = document.createElement('img'); img.src = images.urls[slot]; img.alt = { collections: 'Collections', movies: 'Movies', tvShows: 'TV Shows' }[slot]; el('.banners').append(img);
+                    const img = document.createElement('img'); img.src = images.urls[slot]; img.alt = name; el('.banners').append(img);
                 }
             }
             status(result.resolution.warning || 'Preview only — save when you are happy.');

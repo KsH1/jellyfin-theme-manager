@@ -11,7 +11,7 @@ public sealed partial class ThemeCatalog(string root)
     private CatalogSnapshot _snapshot = new(new ReadOnlyDictionary<string, ResolvedTheme>(new Dictionary<string, ResolvedTheme>()), [], DateTimeOffset.MinValue);
     public string Root { get; } = Path.GetFullPath(root);
     public CatalogSnapshot Snapshot => Volatile.Read(ref _snapshot);
-    private static readonly HashSet<string> AssetKeys = ["background", "splash", "thumbnail", "collections", "movies", "tvShows"];
+    private static readonly HashSet<string> AssetKeys = ["background", "splash", "thumbnail", "collections", "movies", "tvShows", "liveTv"];
     private static readonly HashSet<string> ColorKeys = ["accent", "secondary", "surface", "text", "background"];
     public static readonly IReadOnlySet<string> Effects = new HashSet<string>(StringComparer.Ordinal) { "none", "snow", "leaves", "hearts", "confetti" };
 

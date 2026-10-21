@@ -27,6 +27,10 @@ public sealed class ServerImagesTests : IDisposable
     }
 
     [Fact]
+    public void LiveTvGetsItsOwnBanner()
+        => Assert.Equal("liveTv", LibraryBanners.Assign([new("a", "livetv", "Live TV"), new("b", "movies", "Film")])["a"]);
+
+    [Fact]
     public void FirstLibraryOfATypeWinsWithoutANamedOne()
         => Assert.Equal("movies", LibraryBanners.Assign([new("a", "movies", "Kids"), new("b", "movies", "Classics")])["a"]);
 

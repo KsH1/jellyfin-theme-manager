@@ -1,6 +1,6 @@
 # Development status
 
-Updated 19 October 2026 for version 0.3.3.0 (preview). User documentation is in the [README](../README.md) and [CUSTOM-THEMES.md](CUSTOM-THEMES.md).
+Updated 19 October 2026 for version 0.3.4.0 (preview). User documentation is in the [README](../README.md) and [CUSTOM-THEMES.md](CUSTOM-THEMES.md).
 
 ## Supported
 
@@ -16,7 +16,7 @@ Updated 19 October 2026 for version 0.3.3.0 (preview). User documentation is in 
 | Choice | Per user: follow server default, Automatic Seasonal, fixed theme, calendar, or original Jellyfin. Saved per Jellyfin account. |
 | Calendars | Shared calendars (administrator) and one personal calendar per user. Holidays can be left out of Automatic Seasonal; Fastelavn and Midsummer start left out outside Denmark. |
 | Web client | Background, palette and library banners in Jellyfin Web; theme picker with tabs, thumbnails, search and preview. At the normal address with File Transformation, otherwise at `/web/theme-manager.html`. |
-| Library banners | Themed banner for one library per type, generic banner with the library name for the rest. Choice per library: any theme banner, generic, or the library's own image. |
+| Library banners | Themed banner (Movies, TV Shows, Collections, Live TV) for one library per type, generic banner with the library name for the rest. Choice per library: any theme banner, generic, or the library's own image. |
 | Apps | Optional library images for TV and mobile apps from the server default, with backup and exact restore. Off by default. |
 | Player | The page theme is off over the video; the accent colour stays on sliders and buttons, menus get the theme surface, and the fades behind the title and controls take the theme colours. Tested with a generated video on a test server. |
 | Effects | Snow, leaves, hearts, confetti. Off by default; users can switch them off; never during playback, on admin pages or with reduced motion. |
@@ -30,8 +30,8 @@ Every test below starts its own Jellyfin with empty data on a loopback port; non
 
 | Test | Result (19 October 2026) |
 |---|---|
-| Unit tests (`dotnet test`) | 102 passed |
-| Client tests (`node --test tests/client/core.test.mjs`) | 32 passed |
+| Unit tests (`dotnet test`) | 103 passed |
+| Client tests (`node --test tests/client/core.test.mjs`) | 33 passed |
 | `Test-IsolatedServer.ps1` (API, access rules, import, theme management, previews, holidays, effects default) | 67 checks passed on 12.2 |
 | `Test-ServerImages.ps1` (app images, per-library banners, restore) | 22 checks passed on 12.2 |
 | `Test-WebInjection.ps1` (File Transformation, stale browser cache) | 25 checks passed on 12.2 |

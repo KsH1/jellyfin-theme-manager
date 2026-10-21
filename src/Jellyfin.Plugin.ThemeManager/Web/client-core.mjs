@@ -1,5 +1,7 @@
 // Pure helpers also exercised by Node's built-in test runner. No token persistence.
-export const slots = ['background', 'collections', 'movies', 'tvShows'];
+export const slots = ['background', 'collections', 'movies', 'tvShows', 'liveTv'];
+// Library banners in display order, with their names for image alt text and labels.
+export const bannerSlots = [['collections', 'Collections'], ['movies', 'Movies'], ['tvShows', 'TV Shows'], ['liveTv', 'Live TV']];
 export const normalizeId = value => String(value || '').replaceAll('-', '').toLowerCase();
 export const isDocumentPageHide = (event, browserWindow) => event.target === browserWindow && typeof event.persisted === 'boolean';
 export function sameSession(a, b) { return !!a && !!b && a.key === b.key; }
@@ -37,12 +39,13 @@ export async function request(session, path, { method = 'GET', body, signal } = 
     return response.status === 204 ? null : response.json();
 }
 
-const bannerTypes = { movies: 'movies', tvshows: 'tvShows', boxsets: 'collections' };
+const bannerTypes = { movies: 'movies', tvshows: 'tvShows', boxsets: 'collections', livetv: 'liveTv' };
 // Names that mean "the" library of a type. The theme banners carry that title, so they suit only such a library.
 const typeNames = {
     movies: ['movies', 'movie', 'film', 'films', 'filmer', 'spillefilm'],
     tvShows: ['tvshows', 'tv', 'series', 'serier', 'shows', 'tvserier'],
     collections: ['collections', 'samlinger', 'boxsets'],
+    liveTv: ['livetv', 'live', 'tvguide'],
 };
 const plainName = name => String(name ?? '').toLocaleLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
 
@@ -53,7 +56,7 @@ const plainName = name => String(name ?? '').toLocaleLowerCase().replace(/[^\p{L
 // LibraryBanners.Assign on the server: a library with a choice takes no part in the automatic rule, and 'none' keeps
 // Jellyfin's own card.
 export function librarySlots(views, chosen = {}) {
-    const choiceFor = id => Object.hasOwn(chosen || {}, id) && ['movies', 'tvShows', 'collections', 'generic', 'none'].includes(chosen[id]) ? chosen[id] : null;
+    const choiceFor = id => Object.hasOwn(chosen || {}, id) && ['movies', 'tvShows', 'collections', 'liveTv', 'generic', 'none'].includes(chosen[id]) ? chosen[id] : null;
     const items = (views?.Items || []).map(item => ({ item, id: normalizeId(item.Id) })).filter(entry => /^[a-f0-9]{32}$/.test(entry.id) && choiceFor(entry.id) !== 'none');
     const owner = new Map();
     for (const { item, id } of items) {

@@ -226,3 +226,9 @@ test('client.css themes the player sliders with the accent colour', async () => 
     assert.doesNotMatch(css, /data-tm-accent\][^{]*(?:backgroundContainer|cardImageContainer|skinHeader(?!-withBackground\.osdHeader))/);
     assert.doesNotMatch(css, /data-tm-accent\][^{]*(?:video|htmlvideoplayer)\b[^{]*\{/i);
 });
+test('Live TV gets its own banner slot', () => {
+    const result = librarySlots({ Items: [{ Id: '1'.repeat(32), CollectionType: 'livetv', Name: 'Live TV' }, { Id: '2'.repeat(32), CollectionType: 'movies', Name: 'Film' }] });
+    assert.equal(result.get('1'.repeat(32)).slot, 'liveTv');
+    assert.equal(librarySlots({ Items: [{ Id: '1'.repeat(32), CollectionType: 'music', Name: 'Musik' }] }, { ['1'.repeat(32)]: 'liveTv' }).get('1'.repeat(32)).slot, 'liveTv');
+});
+
