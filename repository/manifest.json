@@ -9,6 +9,30 @@
     "imageUrl": "https://raw.githubusercontent.com/KsH1/jellyfin-theme-manager/main/logo.png",
     "versions": [
       {
+        "version": "0.3.4.0",
+        "changelog": "Live TV banner slot",
+        "targetAbi": "12.2.0.0",
+        "sourceUrl": "https://github.com/KsH1/jellyfin-theme-manager/releases/download/v0.3.4/theme-manager_0.3.4.0.zip",
+        "checksum": "7DB22C846B68AAB4E9A167D84F62AD49",
+        "timestamp": "2026-10-21T19:15:40Z"
+      },
+      {
+        "version": "0.3.4.0",
+        "changelog": "Live TV banner slot",
+        "targetAbi": "12.1.0.0",
+        "sourceUrl": "https://github.com/KsH1/jellyfin-theme-manager/releases/download/v0.3.4/theme-manager_0.3.4.0-jf12.1.0.zip",
+        "checksum": "78A3B1BE667147B1CCA7ED9156240263",
+        "timestamp": "2026-10-21T19:15:28Z"
+      },
+      {
+        "version": "0.3.4.0",
+        "changelog": "Live TV banner slot",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/KsH1/jellyfin-theme-manager/releases/download/v0.3.4/theme-manager_0.3.4.0-jf12.0.0.zip",
+        "checksum": "52A1C7EB320A472A71DEED269B2A2133",
+        "timestamp": "2026-10-21T19:15:13Z"
+      },
+      {
         "version": "0.3.3.0",
         "changelog": "Theme colours in the video player",
         "targetAbi": "12.2.0.0",
